@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="WIMB" />
+<meta name="theme-color" content="#2E3E6E" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-192.png" />
+<!-- 埋め込みSVGファビコン: 紺のsquircle + ライトゴールドのバッグ（PNGアイコンと同じ絵） -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='n' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%232E3A5C'/%3E%3Cstop offset='1' stop-color='%23151B2D'/%3E%3C/linearGradient%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23FCF0CE'/%3E%3Cstop offset='1' stop-color='%23D8B463'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='url(%23n)'/%3E%3Cpath d='M22.4 27.8v-0.2a9.6 9.6 0 0 1 19.2 0v0.2' fill='none' stroke='url(%23g)' stroke-width='3.3'/%3E%3Crect x='11.2' y='27.8' width='41.6' height='22.7' rx='4.6' fill='url(%23g)'/%3E%3Crect x='28.6' y='31.7' width='6.8' height='2.6' rx='1.3' fill='%231E263E'/%3E%3C/svg%3E" />
+<title>WIMB</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg-top: #2E3E6E;      /* 下地グラデの上端（明るい紺） */
+    --bg: #1B2646;          /* 下地グラデの下端 */
+    --card: rgba(255,255,255,0.085);  /* カード・リスト（下地に重ねる） */
+    --field: rgba(255,255,255,0.14);  /* 入力欄・チップ・タイル */
+    --sheet: #2F3B66;       /* シートは下が透けないよう不透明 */
+    --ink: #F4F1E8;
+    --secondary: rgba(244,241,232,0.58);
+    --tertiary: rgba(244,241,232,0.32);
+    --sep: rgba(255,255,255,0.09);
+    --on-gold: #1B2238;     /* ゴールドの上に乗せる文字色 */
+    --red: #FF5A4E;
+    /* アクセントは全部ライトゴールド。変数名は旧来のまま（参照箇所が多いため） */
+    --amber: #E8CB80;
+    --amber-light: #FCF0CE;
+    --blue: #E8CB80;
+    --green: #E8CB80;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); }
+  body {
+    /* 下地は上が明るい縦グラデ。bodyは高さ固定でスクロールしないので背景は動かない */
+    background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 62%);
+    font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+    color: var(--ink); font-size: 16px; -webkit-font-smoothing: antialiased;
+    overscroll-behavior: none;
+    /* ドラッグ・長押しでテキスト選択やメニューが出ないように（入力欄だけ解除） */
+    -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+  }
+  input, textarea { -webkit-user-select: text; user-select: text; }
+  #app {
+    height: var(--app-height, 100%);
+    display: flex; flex-direction: column;
+    padding-top: var(--safe-top);
+    transition: height 0.15s ease-out;
+  }
+  .view { display: none; flex-direction: column; flex: 1; min-height: 0; }
+  .view.active { display: flex; }
+
+  .navbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px; min-height: 44px; position: relative;
+    background: rgba(46,62,110,0.78);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border-bottom: 0.5px solid var(--sep); z-index: 10;
+  }
+  .navbar .title {
+    font-size: 17px; font-weight: 600;
+    position: absolute; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none; white-space: nowrap;
+    max-width: 55%; overflow: hidden; text-overflow: ellipsis;
+  }
+  .icon-btn {
+    width: 44px; min-width: 44px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--blue); background: none; border: 0; cursor: pointer;
+    font-family: inherit; font-size: 16px; font-weight: 400;
+  }
+  .icon-btn.wide { width: auto; min-width: 44px; padding: 0 4px; }
+  .icon-btn.done { font-weight: 600; }
+  .scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ---------- ホーム ---------- */
+  .always-card {
+    margin: 14px 16px 6px; background: var(--card); border-radius: 14px;
+    padding: 14px 16px; display: flex; align-items: center; gap: 12px;
+    cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+  }
+  .always-card .ring {
+    width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--amber-light), var(--amber));
+    display: flex; align-items: center; justify-content: center; color: var(--on-gold);
+  }
+  .always-card .tx { flex: 1; min-width: 0; }
+  .always-card .tx b { font-size: 15px; font-weight: 600; display: block; }
+  .always-card .tx span { font-size: 12px; color: var(--secondary); }
+  .chev { color: var(--tertiary); flex-shrink: 0; }
+
+  .sec-label {
+    font-size: 12px; color: var(--secondary); font-weight: 600;
+    padding: 16px 20px 8px; letter-spacing: 0.02em;
+  }
+  .grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    padding: 0 16px 20px;
+  }
+  .pat-card {
+    background: var(--card); border-radius: 16px; padding: 16px 14px;
+    display: flex; flex-direction: column; gap: 6px; cursor: pointer;
+    position: relative; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    min-height: 104px; justify-content: center; text-align: left;
+    border: 0; font-family: inherit; color: var(--ink);
+  }
+  .pat-card .emo { font-size: 28px; line-height: 1; }
+  .pat-card .nm { font-size: 15px; font-weight: 600; line-height: 1.3; word-break: break-word; }
+  .pat-card .cnt { font-size: 12px; color: var(--secondary); }
+  .pat-card .ago { font-size: 11px; color: var(--tertiary); }
+  .pat-card.add {
+    align-items: center; justify-content: center; text-align: center;
+    background: transparent; border: 2px dashed var(--tertiary);
+    color: var(--secondary); box-shadow: none; gap: 4px; min-height: 104px;
+  }
+  .pat-card.add .emo { font-size: 22px; }
+
+  /* フォルダカード: パターン単体と見分けられるよう、ゴールド寄りの面にする */
+  .pat-card.folder {
+    gap: 8px;
+    background: rgba(232,203,128,0.10);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(232,203,128,0.22);
+  }
+  .fol-tile {
+    width: 52px; height: 52px; border-radius: 14px; background: rgba(232,203,128,0.14);
+    display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+    gap: 2px; padding: 5px; align-items: center; justify-items: center;
+  }
+  .fol-tile span { font-size: 15px; line-height: 1; }
+  .fol-tile.empty { display: flex; align-items: center; justify-content: center; color: rgba(232,203,128,0.55); font-size: 20px; }
+  .fol-badge {
+    position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 700;
+    color: var(--amber); background: rgba(232,203,128,0.16);
+    padding: 3px 8px; border-radius: 999px;
+  }
+
+  .del-badge, .out-badge {
+    position: absolute; top: -7px; left: -7px; height: 24px;
+    border-radius: 999px; color: #fff; border: 0;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2); z-index: 3;
+  }
+  .del-badge { width: 24px; background: var(--red); }
+  .out-badge { padding: 0 9px; background: var(--amber); color: var(--on-gold); font-family: inherit; font-size: 11px; font-weight: 700; }
+  body.editing .pat-card:not(.add) { animation: wiggle 0.4s ease-in-out infinite alternate; touch-action: none; }
+  body.dragging-now .pat-card { animation: none !important; }
+  @keyframes wiggle { from { transform: rotate(-0.5deg); } to { transform: rotate(0.5deg); } }
+  .pat-card.dragging { opacity: 0.25; }
+  .pat-card.ghost {
+    background: #3B4877;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.4); opacity: 0.96;
+    animation: none !important; transition: none !important;
+  }
+  .pat-card.drop-target { outline: 2.5px solid var(--blue); outline-offset: 2px; }
+
+  .hint { text-align: center; font-size: 13px; color: var(--secondary); padding: 8px 32px 4px; line-height: 1.6; }
+  .wipe-btn {
+    display: block; margin: 10px auto 0; background: transparent;
+    border: 1px solid var(--sep); border-radius: 999px;
+    padding: 11px 20px; font-family: inherit; font-size: 13px; font-weight: 500;
+    color: var(--secondary); cursor: pointer;
+  }
+  .version { text-align: center; padding: 14px 10px calc(14px + var(--safe-bottom)); font-size: 12px; color: var(--tertiary); }
+  .empty-folder { text-align: center; color: var(--tertiary); font-size: 14px; line-height: 1.8; padding: 34px 30px 10px; }
+
+  /* ---------- チェック画面 ---------- */
+  .progress-wrap { padding: 12px 20px 10px; }
+  .progress-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
+  .progress-top .left { font-size: 15px; font-weight: 600; }
+  .progress-top .right { font-size: 12px; color: var(--secondary); }
+  .bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
+  .bar > i {
+    display: block; height: 100%; width: 0%;
+    background: linear-gradient(90deg, var(--amber-light), var(--amber));
+    border-radius: 3px; transition: width 0.25s ease-out;
+  }
+  .bar.done > i { background: var(--amber-light); }
+
+  .group { margin: 8px 16px 16px; }
+  .group > h3 {
+    font-size: 12px; font-weight: 600; color: var(--secondary);
+    padding: 6px 4px 8px; display: flex; align-items: center; gap: 6px;
+  }
+  .group > h3 .tag {
+    font-size: 10px; background: rgba(232,203,128,0.16); color: var(--amber);
+    padding: 2px 7px; border-radius: 999px; font-weight: 700;
+  }
+  .list { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+  .row {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    border-bottom: 0.5px solid var(--sep); cursor: pointer;
+    background: transparent; border-left: 0; border-right: 0; border-top: 0;
+    width: 100%; font-family: inherit; font-size: 16px; color: var(--ink); text-align: left;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .ck {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid var(--tertiary);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--on-gold); transition: background 0.15s, border-color 0.15s;
+  }
+  .row .ck svg { opacity: 0; transition: opacity 0.15s; }
+  .row.on .ck { background: var(--amber); border-color: var(--amber); }
+  .row.on .ck svg { opacity: 1; }
+  .row .lb { flex: 1; min-width: 0; line-height: 1.4; word-break: break-word; }
+  .row.on .lb { color: var(--tertiary); text-decoration: line-through; }
+  .row .minus {
+    width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0; border: 0;
+    background: var(--red); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .add-row { display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-top: 0.5px solid var(--sep); }
+  .add-row input {
+    flex: 1; border: 0; outline: none; font-family: inherit; font-size: 16px;
+    background: transparent; color: var(--ink); min-width: 0;
+  }
+  .add-row .plus { width: 26px; height: 26px; color: var(--amber); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .empty { padding: 26px 20px; text-align: center; color: var(--tertiary); font-size: 14px; line-height: 1.7; }
+
+  .footer { padding: 10px 16px calc(12px + var(--safe-bottom)); background: rgba(27,38,70,0.86); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--sep); }
+  .go-btn {
+    width: 100%; border: 0; border-radius: 14px; padding: 16px;
+    font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer;
+    background: linear-gradient(135deg, var(--amber-light), var(--amber));
+    color: var(--on-gold); box-shadow: 0 8px 26px rgba(232,203,128,0.28);
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .go-btn[disabled] { background: rgba(255,255,255,0.08); color: var(--tertiary); box-shadow: none; cursor: default; }
+  .clear-btn {
+    display: block; margin: 8px auto 0; background: none; border: 0;
+    font-family: inherit; font-size: 13px; color: var(--secondary); cursor: pointer; padding: 4px 10px;
+  }
+
+  /* ---------- シート ---------- */
+  .sheet-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 900;
+    display: none; align-items: flex-end; justify-content: center;
+  }
+  .sheet-bg.show { display: flex; }
+  .sheet {
+    background: var(--sheet); width: 100%; max-width: 480px;
+    border-radius: 20px 20px 0 0; padding: 20px 20px calc(20px + var(--safe-bottom));
+    animation: up 0.25s cubic-bezier(.32,.72,0,1);
+    max-height: 92%; overflow-y: auto;
+  }
+  @keyframes up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .sheet h2 { font-size: 17px; font-weight: 600; text-align: center; margin-bottom: 16px; }
+  .sheet input.nm {
+    width: 100%; border: 0; background: var(--field); border-radius: 12px;
+    padding: 14px 16px; font-family: inherit; font-size: 16px; outline: none; color: var(--ink);
+  }
+  .emo-pick { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin: 14px 0 4px; }
+  .emo-pick button {
+    aspect-ratio: 1; border: 2px solid transparent; background: var(--field);
+    border-radius: 12px; font-size: 22px; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; padding: 0;
+  }
+  .emo-pick button.sel { border-color: var(--amber); background: rgba(232,203,128,0.18); }
+  .field-label { font-size: 12px; font-weight: 600; color: var(--secondary); margin: 16px 2px 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chips button {
+    border: 0; background: var(--field); color: var(--ink); border-radius: 999px;
+    padding: 9px 14px; font-family: inherit; font-size: 14px; cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .chips button.sel { background: var(--amber); color: var(--on-gold); font-weight: 600; }
+  .sheet-actions { display: flex; gap: 10px; margin-top: 18px; }
+  .sheet-actions button {
+    flex: 1; border: 0; border-radius: 12px; padding: 14px;
+    font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+  .btn-cancel { background: var(--field); color: var(--ink); }
+  .btn-ok { background: var(--amber); color: var(--on-gold); }
+  .btn-del {
+    display: block; width: 100%; margin-top: 12px; background: none; border: 0;
+    font-family: inherit; font-size: 15px; color: var(--red); cursor: pointer; padding: 10px;
+  }
+  .toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 14px; padding: 12px 16px; background: var(--field); border-radius: 12px;
+  }
+  .toggle-row .tl { font-size: 15px; }
+  .toggle-row .ts { font-size: 11px; color: var(--secondary); margin-top: 2px; }
+  .sw { width: 50px; height: 30px; border-radius: 15px; background: rgba(255,255,255,0.16); border: 0; position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
+  .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s; }
+  .sw.on { background: var(--green); }
+  .sw.on::after { transform: translateX(20px); }
+
+  /* ---------- トースト ---------- */
+  #toast {
+    position: fixed; left: 50%; bottom: calc(var(--safe-bottom) + 90px);
+    transform: translate(-50%, 20px); z-index: 1200;
+    background: var(--amber); color: var(--on-gold); padding: 14px 22px;
+    border-radius: 999px; font-size: 15px; font-weight: 600;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s, transform 0.25s;
+    white-space: nowrap;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* 更新バナー */
+  #updateBanner {
+    position: fixed; left: 12px; right: 12px;
+    bottom: calc(var(--safe-bottom) + 16px); z-index: 1000;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    background: var(--amber); color: var(--on-gold); border: 0; border-radius: 14px;
+    padding: 14px 18px; font-family: inherit; font-size: 14px; font-weight: 600;
+    box-shadow: 0 8px 28px rgba(232,203,128,0.35); cursor: pointer;
+    transform: translateY(140%); transition: transform 0.35s cubic-bezier(.32,.72,0,1);
+  }
+  #updateBanner.show { transform: translateY(0); }
+  #updateBanner svg { display: block; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ========== ホーム ========== -->
+  <div id="homeView" class="view active">
+    <div class="navbar">
+      <span style="width:44px;"></span>
+      <span class="title">WIMB</span>
+      <button class="icon-btn wide" id="homeEditBtn">編集</button>
+    </div>
+    <div class="scroll">
+      <div class="always-card" id="alwaysCard">
+        <div class="ring">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+        </div>
+        <div class="tx">
+          <b>いつもの</b>
+          <span id="alwaysSub">—</span>
+        </div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
+      <div class="sec-label">パターン</div>
+      <div class="grid" id="homeGrid"></div>
+      <div class="hint" id="homeHint"></div>
+      <button class="wipe-btn" id="wipeAllBtn" style="display:none;"></button>
+      <div class="version" id="versionLabel"></div>
+    </div>
+  </div>
+
+  <!-- ========== フォルダ ========== -->
+  <div id="folderView" class="view">
+    <div class="navbar">
+      <button class="icon-btn" id="folderBackBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="title" id="folderTitle">—</span>
+      <button class="icon-btn wide" id="folderEditBtn">編集</button>
+    </div>
+    <div class="scroll">
+      <div class="grid" id="folderGrid" style="padding-top:14px;"></div>
+      <div class="empty-folder" id="folderEmpty" style="display:none;">まだ空のフォルダです<br>編集から中身を追加できます</div>
+      <div class="hint" id="folderHint"></div>
+    </div>
+  </div>
+
+  <!-- ========== チェック画面 ========== -->
+  <div id="listView" class="view">
+    <div class="navbar">
+      <button class="icon-btn" id="backBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="title" id="listTitle">—</span>
+      <button class="icon-btn wide" id="listEditBtn">編集</button>
+    </div>
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-top">
+        <span class="left" id="progLeft">—</span>
+        <span class="right" id="progRight"></span>
+      </div>
+      <div class="bar" id="progBar"><i></i></div>
+    </div>
+    <div class="scroll" id="listScroll"></div>
+    <div class="footer" id="listFooter">
+      <button class="go-btn" id="goBtn" disabled>
+        <span id="goText">出発</span>
+      </button>
+      <button class="clear-btn" id="clearBtn">ぜんぶ外す</button>
+    </div>
+  </div>
+</div>
+
+<!-- 編集シート -->
+<div class="sheet-bg" id="sheetBg">
+  <div class="sheet">
+    <h2 id="sheetTitle">パターン</h2>
+    <input class="nm" id="sheetName" type="text" placeholder="名前（例: ジム）" maxlength="16" />
+    <div id="patternOnly">
+      <div class="emo-pick" id="emoPick"></div>
+      <div class="toggle-row">
+        <div>
+          <div class="tl">「いつもの」を足す</div>
+          <div class="ts">財布・鍵などを先頭に自動表示</div>
+        </div>
+        <button class="sw on" id="alwaysSw"></button>
+      </div>
+      <div class="field-label">フォルダ</div>
+      <div class="chips" id="folderChips"></div>
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="sheetCancel">やめる</button>
+      <button class="btn-ok" id="sheetOk">保存</button>
+    </div>
+    <button class="btn-del" id="sheetDel" style="display:none;">削除</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ---------- helper ----------
+  const $ = (s) => document.querySelector(s);
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const todayStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+
+  // ---------- IndexedDB ----------
+  // 表示名は「いってきます」→「WIMB」に変えたが、内部の識別子（DB名・SCHEMA）は
+  // 保存済みデータとの互換のため変えない。ここは今後も触らないこと。
+  const DB_NAME = 'ittekimasu-db';
+  const DB_VERSION = 2;
+  const STORES = ['patterns', 'folders'];
+  let _db = null;
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        for (const s of STORES) {
+          if (!db.objectStoreNames.contains(s)) db.createObjectStore(s, { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = () => { _db = req.result; resolve(_db); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+  function tx(store, mode = 'readonly') { return _db.transaction(store, mode).objectStore(store); }
+  function getAll(store) { return new Promise((res, rej) => { const r = tx(store).getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
+  function put(store, val) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').put(val); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
+  function del(store, id) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').delete(id); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
+
+  // ---------- バージョン ----------
+  const APP_VERSION = '1.7.0';
+  function renderVersionLabel() {
+    const el = document.getElementById('versionLabel');
+    if (el) el.textContent = 'v' + APP_VERSION;
+  }
+
+  // ---------- 定数 ----------
+  const ALWAYS_ID = 'always';
+  const EMOJIS = ['🏋️','💼','🎤','🛒','☕️','🚃','🏥','🎒','🌙','📷','🍺','⚽️','✈️','🧺','🎬','🏃','🍽️','🐟'];
+
+  // ---------- State ----------
+  const state = {
+    patterns: [], folders: [],
+    currentId: null, currentFolderId: null, backTo: 'home',
+    editHome: false, editFolder: false, editList: false
+  };
+  let sheetCtx = null;
+
+  function byOrder(a, b) { return (a.order || 0) - (b.order || 0); }
+  function getPat(id) { return state.patterns.find((p) => p.id === id); }
+  function getFol(id) { return state.folders.find((f) => f.id === id); }
+  function always() { return getPat(ALWAYS_ID); }
+  function folderExists(id) { return !!(id && getFol(id)); }
+  function patsIn(folderId) {
+    return state.patterns.filter((p) => p.id !== ALWAYS_ID && p.folderId === folderId).sort(byOrder);
+  }
+  // 最上段に並ぶもの = フォルダ + フォルダ無しパターン（同じ order 空間）
+  function topItems() {
+    const items = [];
+    for (const f of state.folders) items.push({ kind: 'folder', id: f.id, order: f.order || 0, ref: f });
+    for (const p of state.patterns) {
+      if (p.id === ALWAYS_ID) continue;
+      if (folderExists(p.folderId)) continue;
+      items.push({ kind: 'pattern', id: p.id, order: p.order || 0, ref: p });
+    }
+    return items.sort(byOrder);
+  }
+  const oidOf = (it) => (it.kind === 'folder' ? 'f:' : 'p:') + it.id;
+
+  async function loadAll() {
+    state.patterns = await getAll('patterns');
+    state.folders = await getAll('folders');
+    if (!always()) await seed();
+    await ensureSeedFolders();
+  }
+
+  // 最初から用意しておくフォルダ。既にデータがある人にも1回だけ追加する。
+  // 一度作った（または本人が消した）あとは再生成しないよう、キーで記録しておく。
+  const SEED_FOLDERS = [{ key: 'hospital', name: '病院' }];
+  async function ensureSeedFolders() {
+    for (const sf of SEED_FOLDERS) {
+      const flag = 'ittekimasu.seedFolder.' + sf.key;
+      let already = false;
+      try { already = localStorage.getItem(flag) === '1'; } catch (e) {}
+      if (already) continue;
+      if (!state.folders.some((f) => f.name === sf.name)) {
+        const f = { id: uid(), name: sf.name, order: topItems().length, updatedAt: Date.now() };
+        await saveFol(f);
+        state.folders.push(f);
+      }
+      try { localStorage.setItem(flag, '1'); } catch (e) {}
+    }
+  }
+
+  async function seed() {
+    const mk = (id, name, emoji, order, items, useAlways) => ({
+      id, name, emoji, order,
+      items: items.map((t) => ({ id: uid(), label: t })),
+      useAlways: useAlways !== false, folderId: null,
+      session: null, lastDepartedAt: null, updatedAt: Date.now()
+    });
+    const seeds = [
+      mk(ALWAYS_ID, 'いつもの', '✅', 0, ['財布', '鍵', 'スマホ', 'イヤホン'], false),
+      mk(uid(), 'ジム', '🏋️', 0, ['ウェア', 'シューズ', 'タオル', '水']),
+      mk(uid(), '仕事', '💼', 1, ['PC', '充電器', 'メモ帳']),
+      mk(uid(), 'カラオケ', '🎤', 2, ['のど飴', '会員証']),
+      mk(uid(), '買い物', '🛒', 3, ['エコバッグ', 'ポイントカード'])
+    ];
+    for (const s of seeds) await put('patterns', s);
+    state.patterns = await getAll('patterns');
+  }
+
+  async function save(p) { p.updatedAt = Date.now(); await put('patterns', p); }
+  async function saveFol(f) { f.updatedAt = Date.now(); await put('folders', f); }
+
+  // ---------- チェック状態 ----------
+  function activeChecks(p) {
+    const s = p.session;
+    if (!s || s.finished || s.date !== todayStr()) return new Set();
+    return new Set(s.ids || []);
+  }
+  async function setChecks(p, set) {
+    p.session = { date: todayStr(), ids: Array.from(set), finished: false };
+    await save(p);
+  }
+  function visibleItems(p) {
+    const out = [];
+    if (p.id !== ALWAYS_ID && p.useAlways) {
+      for (const it of always().items) out.push({ item: it, from: ALWAYS_ID });
+    }
+    for (const it of p.items) out.push({ item: it, from: p.id });
+    return out;
+  }
+  function daysAgo(ts) {
+    if (!ts) return '';
+    const d = Math.floor((Date.now() - ts) / 86400000);
+    if (d <= 0) return '今日';
+    if (d === 1) return '昨日';
+    return d + '日前';
+  }
+
+  // ---------- カード生成 ----------
+  const X_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
+
+  function patternCard(p, opts) {
+    const el = document.createElement('div');
+    el.className = 'pat-card';
+    el.dataset.oid = 'p:' + p.id;
+    const total = visibleItems(p).length;
+    el.innerHTML =
+      (opts.badge === 'del' ? '<button class="del-badge" data-del="' + p.id + '">' + X_SVG + '</button>' : '') +
+      (opts.badge === 'out' ? '<button class="out-badge" data-out="' + p.id + '">出す</button>' : '') +
+      '<span class="emo">' + esc(p.emoji) + '</span>' +
+      '<span class="nm">' + esc(p.name) + '</span>' +
+      '<span class="cnt">' + total + 'つ</span>' +
+      (p.lastDepartedAt && !opts.badge ? '<span class="ago">前回 ' + daysAgo(p.lastDepartedAt) + '</span>' : '');
+    return el;
+  }
+
+  function folderCard(f, editing) {
+    const el = document.createElement('div');
+    el.className = 'pat-card folder';
+    el.dataset.oid = 'f:' + f.id;
+    const kids = patsIn(f.id);
+    const tile = kids.length
+      ? '<div class="fol-tile">' + kids.slice(0, 4).map((k) => '<span>' + esc(k.emoji) + '</span>').join('') + '</div>'
+      : '<div class="fol-tile empty">＋</div>';
+    el.innerHTML =
+      (editing ? '<button class="del-badge" data-delfol="' + f.id + '">' + X_SVG + '</button>' : '') +
+      '<span class="fol-badge">フォルダ</span>' + tile +
+      '<span class="nm">' + esc(f.name) + '</span>' +
+      '<span class="cnt">' + kids.length + '個のパターン</span>';
+    return el;
+  }
+
+  // ---------- ホーム描画 ----------
+  function renderHome() {
+    const a = always();
+    $('#alwaysSub').textContent = a.items.length ? a.items.map((i) => i.label).join('・') : 'タップして登録';
+
+    const grid = $('#homeGrid');
+    grid.innerHTML = '';
+    for (const it of topItems()) {
+      const el = it.kind === 'folder'
+        ? folderCard(it.ref, state.editHome)
+        : patternCard(it.ref, { badge: state.editHome ? 'del' : null });
+      el.addEventListener('click', (e) => {
+        if (justDragged) return;
+        const d = e.target.closest('[data-del]');
+        if (d) { deletePattern(d.getAttribute('data-del')); return; }
+        const df = e.target.closest('[data-delfol]');
+        if (df) { deleteFolder(df.getAttribute('data-delfol')); return; }
+        if (state.editHome) { it.kind === 'folder' ? openFolderSheet(it.ref) : openSheet(it.ref); return; }
+        it.kind === 'folder' ? openFolder(it.id) : openList(it.id, 'home');
+      });
+      grid.appendChild(el);
+    }
+
+    grid.appendChild(addCard('＋', 'パターンを追加', () => openSheet(null, null)));
+    if (state.editHome) grid.appendChild(addCard('📁', 'フォルダを追加', () => openFolderSheet(null)));
+
+    $('#homeEditBtn').textContent = state.editHome ? '完了' : '編集';
+    $('#homeEditBtn').classList.toggle('done', state.editHome);
+    document.body.classList.toggle('editing', state.editHome || state.editFolder);
+    $('#homeHint').textContent = state.editHome ? 'ドラッグで並べ替え・タップで名前の変更' : '';
+
+    // チェックが残っているパターンがあるときだけ、一括で外すボタンを出す
+    const dirty = checkedPatterns();
+    const wipe = $('#wipeAllBtn');
+    wipe.style.display = (dirty.length && !state.editHome) ? 'block' : 'none';
+    wipe.textContent = 'すべてのチェックを外す（' + dirty.length + 'パターン）';
+
+    if (state.editHome) attachDrag(grid, commitHomeOrder);
+  }
+
+  function addCard(emo, label, onClick) {
+    const el = document.createElement('div');
+    el.className = 'pat-card add';
+    el.innerHTML = '<span class="emo">' + emo + '</span><span class="cnt">' + label + '</span>';
+    el.addEventListener('click', () => { if (!justDragged) onClick(); });
+    return el;
+  }
+
+  // ---------- フォルダ描画 ----------
+  function renderFolder() {
+    const f = getFol(state.currentFolderId);
+    if (!f) { goHome(); return; }
+    $('#folderTitle').textContent = '📁 ' + f.name;
+    $('#folderEditBtn').textContent = state.editFolder ? '完了' : '編集';
+    $('#folderEditBtn').classList.toggle('done', state.editFolder);
+    document.body.classList.toggle('editing', state.editHome || state.editFolder);
+
+    const grid = $('#folderGrid');
+    grid.innerHTML = '';
+    const kids = patsIn(f.id);
+    for (const p of kids) {
+      const el = patternCard(p, { badge: state.editFolder ? 'out' : null });
+      el.addEventListener('click', (e) => {
+        if (justDragged) return;
+        const o = e.target.closest('[data-out]');
+        if (o) { moveOutOfFolder(o.getAttribute('data-out')); return; }
+        if (state.editFolder) openSheet(p);
+        else openList(p.id, 'folder');
+      });
+      grid.appendChild(el);
+    }
+    grid.appendChild(addCard('＋', 'パターンを追加', () => openSheet(null, f.id)));
+
+    $('#folderEmpty').style.display = kids.length === 0 && !state.editFolder ? 'block' : 'none';
+    $('#folderHint').textContent = state.editFolder ? 'ドラッグで並べ替え・「出す」で外に移動' : '';
+
+    if (state.editFolder) attachDrag(grid, commitFolderOrder);
+  }
+
+  // ---------- ドラッグ並べ替え ----------
+  let justDragged = false;
+  function attachDrag(grid, commit) {
+    grid.querySelectorAll('.pat-card:not(.add)').forEach((card) => {
+      card.addEventListener('pointerdown', (e) => startDrag(e, card, grid, commit));
+    });
+  }
+
+  function startDrag(e, card, grid, commit) {
+    if (e.button !== undefined && e.button !== 0) return;
+    if (e.target.closest('[data-del],[data-out],[data-delfol]')) return;
+    const startX = e.clientX, startY = e.clientY;
+    const oid = card.dataset.oid;
+    let started = false, ghost = null, rect = null, current = card;
+
+    function move(ev) {
+      const dx = ev.clientX - startX, dy = ev.clientY - startY;
+      if (!started) {
+        if (Math.hypot(dx, dy) < 8) return;
+        started = true;
+        rect = card.getBoundingClientRect();
+        ghost = card.cloneNode(true);
+        ghost.classList.add('ghost');
+        ghost.style.position = 'fixed';
+        ghost.style.left = rect.left + 'px';
+        ghost.style.top = rect.top + 'px';
+        ghost.style.width = rect.width + 'px';
+        ghost.style.height = rect.height + 'px';
+        ghost.style.zIndex = '800';
+        ghost.style.pointerEvents = 'none';
+        ghost.style.margin = '0';
+        document.body.appendChild(ghost);
+        current.classList.add('dragging');
+        document.body.classList.add('dragging-now');
+      }
+      ev.preventDefault();
+      ghost.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(1.05)';
+
+      const under = document.elementFromPoint(ev.clientX, ev.clientY);
+      if (!under) return;
+      const overCard = under.closest('.pat-card');
+      if (!overCard || !grid.contains(overCard)) return;
+
+      const ids = Array.from(grid.querySelectorAll('.pat-card:not(.add)')).map((el) => el.dataset.oid);
+      const from = ids.indexOf(oid);
+      let to;
+      if (overCard.classList.contains('add')) to = ids.length - 1;
+      else {
+        to = ids.indexOf(overCard.dataset.oid);
+        if (to < 0 || to === from) return;
+      }
+      if (to === from) return;
+      ids.splice(to, 0, ids.splice(from, 1)[0]);
+      flip(grid, () => {
+        commit(ids, true);
+        current = grid.querySelector('[data-oid="' + oid + '"]');
+        if (current) current.classList.add('dragging');
+      });
+    }
+
+    function up() {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      if (!started) return;
+      if (ghost) ghost.remove();
+      document.body.classList.remove('dragging-now');
+      const el = grid.querySelector('[data-oid="' + oid + '"]');
+      if (el) el.classList.remove('dragging');
+      const ids = Array.from(grid.querySelectorAll('.pat-card:not(.add)')).map((x) => x.dataset.oid);
+      commit(ids, false);
+      justDragged = true;
+      setTimeout(() => { justDragged = false; }, 60);
+    }
+
+    window.addEventListener('pointermove', move, { passive: false });
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  }
+
+  // 並べ替え中は再描画で位置が飛ぶので、FLIP でぬるっと動かす
+  function flip(grid, mutate) {
+    const before = new Map();
+    grid.querySelectorAll('[data-oid]').forEach((el) => before.set(el.dataset.oid, el.getBoundingClientRect()));
+    mutate();
+    grid.querySelectorAll('[data-oid]').forEach((el) => {
+      const b = before.get(el.dataset.oid);
+      if (!b) return;
+      const a = el.getBoundingClientRect();
+      const dx = b.left - a.left, dy = b.top - a.top;
+      if (!dx && !dy) return;
+      el.style.transition = 'none';
+      el.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+      requestAnimationFrame(() => {
+        el.style.transition = 'transform .22s cubic-bezier(.2,.8,.2,1)';
+        el.style.transform = '';
+      });
+    });
+  }
+
+  function commitHomeOrder(oids, preview) {
+    oids.forEach((oid, i) => {
+      const [k, id] = [oid.slice(0, 1), oid.slice(2)];
+      const ent = k === 'f' ? getFol(id) : getPat(id);
+      if (ent) ent.order = i;
+    });
+    renderHome();
+    if (!preview) persist(oids);
+  }
+  function commitFolderOrder(oids, preview) {
+    oids.forEach((oid, i) => {
+      const p = getPat(oid.slice(2));
+      if (p) p.order = i;
+    });
+    renderFolder();
+    if (!preview) persist(oids);
+  }
+  async function persist(oids) {
+    for (const oid of oids) {
+      const id = oid.slice(2);
+      if (oid.slice(0, 1) === 'f') { const f = getFol(id); if (f) await saveFol(f); }
+      else { const p = getPat(id); if (p) await save(p); }
+    }
+  }
+
+  // ---------- チェック画面描画 ----------
+  function renderList() {
+    const p = getPat(state.currentId);
+    if (!p) return;
+    const isAlways = p.id === ALWAYS_ID;
+    $('#listTitle').textContent = p.emoji + ' ' + p.name;
+    $('#listEditBtn').textContent = state.editList ? '完了' : '編集';
+    $('#listEditBtn').classList.toggle('done', state.editList);
+    $('#listEditBtn').style.visibility = isAlways ? 'hidden' : 'visible';
+
+    const editing = state.editList || isAlways;
+    const checks = activeChecks(p);
+    const vis = visibleItems(p);
+    const total = vis.length;
+    const done = vis.filter((v) => checks.has(v.item.id)).length;
+
+    $('#progressWrap').style.display = editing ? 'none' : 'block';
+    $('#listFooter').style.display = editing ? 'none' : 'block';
+    if (!editing) {
+      const rest = total - done;
+      $('#progLeft').textContent = total === 0 ? '持ち物がありません' : (rest === 0 ? 'ぜんぶそろいました' : 'あと ' + rest + 'つ');
+      $('#progRight').textContent = total === 0 ? '' : done + ' / ' + total;
+      $('#progBar').classList.toggle('done', total > 0 && rest === 0);
+      $('#progBar').firstElementChild.style.width = (total ? (done / total) * 100 : 0) + '%';
+      const go = $('#goBtn');
+      go.disabled = !(total > 0 && rest === 0);
+      $('#goText').textContent = rest === 0 && total > 0 ? 'いってきます 👋' : '出発';
+      $('#clearBtn').style.visibility = done > 0 ? 'visible' : 'hidden';
+    }
+
+    const scroll = $('#listScroll');
+    scroll.innerHTML = '';
+    if (!isAlways && p.useAlways) {
+      scroll.appendChild(groupEl('いつもの', always().items, ALWAYS_ID, checks, editing, true));
+    }
+    scroll.appendChild(groupEl(isAlways ? '毎回もつもの' : 'このお出かけ', p.items, p.id, checks, editing, false));
+
+    if (editing) {
+      const tip = document.createElement('div');
+      tip.className = 'hint';
+      tip.style.padding = '4px 32px 24px';
+      tip.textContent = isAlways ? 'ここに入れたものは、各パターンの先頭に自動で出ます' : '';
+      scroll.appendChild(tip);
+    } else {
+      const pad = document.createElement('div');
+      pad.style.height = '10px';
+      scroll.appendChild(pad);
+    }
+  }
+
+  function groupEl(title, items, ownerId, checks, editing, isAlwaysGroup) {
+    const g = document.createElement('div');
+    g.className = 'group';
+    const h = document.createElement('h3');
+    h.innerHTML = esc(title) + (isAlwaysGroup ? '<span class="tag">自動</span>' : '');
+    g.appendChild(h);
+
+    const list = document.createElement('div');
+    list.className = 'list';
+
+    if (items.length === 0 && !editing) {
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.textContent = '編集から持ち物を追加できます';
+      list.appendChild(e);
+    }
+
+    for (const it of items) {
+      const row = document.createElement(editing ? 'div' : 'button');
+      row.className = 'row' + (!editing && checks.has(it.id) ? ' on' : '');
+      if (editing) {
+        row.innerHTML =
+          '<span class="minus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M5 12h14"/></svg></span>' +
+          '<span class="lb">' + esc(it.label) + '</span>';
+        row.querySelector('.minus').addEventListener('click', () => removeItem(ownerId, it.id));
+      } else {
+        row.innerHTML =
+          '<span class="ck"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>' +
+          '<span class="lb">' + esc(it.label) + '</span>';
+        row.addEventListener('click', () => toggle(it.id));
+      }
+      list.appendChild(row);
+    }
+
+    if (editing) {
+      const ar = document.createElement('div');
+      ar.className = 'add-row';
+      ar.innerHTML =
+        '<span class="plus"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>' +
+        '<input type="text" placeholder="持ち物を追加" maxlength="24" enterkeyhint="done" />';
+      const inp = ar.querySelector('input');
+      const commit = () => {
+        const v = inp.value.trim();
+        if (!v) return;
+        inp.value = '';
+        addItem(ownerId, v);
+      };
+      inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
+      inp.addEventListener('blur', commit);
+      ar.querySelector('.plus').addEventListener('click', () => inp.focus());
+      list.appendChild(ar);
+    }
+
+    g.appendChild(list);
+    return g;
+  }
+
+  // ---------- 操作 ----------
+  async function toggle(itemId) {
+    const p = getPat(state.currentId);
+    const set = activeChecks(p);
+    if (set.has(itemId)) set.delete(itemId); else set.add(itemId);
+    await setChecks(p, set);
+    renderList();
+  }
+  async function clearChecks() {
+    const p = getPat(state.currentId);
+    await setChecks(p, new Set());
+    renderList();
+  }
+  // 今チェックが残っている（＝出発前の途中状態の）パターン
+  function checkedPatterns() {
+    return state.patterns.filter((p) => activeChecks(p).size > 0);
+  }
+  async function clearAllChecks() {
+    const dirty = checkedPatterns();
+    if (!dirty.length) return;
+    const names = dirty.map((p) => p.name).join('・');
+    if (!confirm(dirty.length + 'つのパターンのチェックを外します。\n' + names)) return;
+    for (const p of dirty) { p.session = null; await save(p); }
+    renderHome(); renderFolder0();
+    toast('チェックを外しました');
+  }
+  async function depart() {
+    const p = getPat(state.currentId);
+    p.session = { date: todayStr(), ids: [], finished: true };
+    p.lastDepartedAt = Date.now();
+    await save(p);
+    goBackFromList();
+    toast('いってらっしゃい 👋');
+  }
+  async function addItem(ownerId, label) {
+    const owner = getPat(ownerId);
+    owner.items.push({ id: uid(), label });
+    await save(owner);
+    renderList();
+    const inputs = document.querySelectorAll('#listScroll .add-row input');
+    const target = ownerId === ALWAYS_ID && state.currentId !== ALWAYS_ID ? inputs[0] : inputs[inputs.length - 1];
+    if (target) target.focus();
+  }
+  async function removeItem(ownerId, itemId) {
+    const owner = getPat(ownerId);
+    owner.items = owner.items.filter((i) => i.id !== itemId);
+    await save(owner);
+    renderList();
+  }
+  async function deletePattern(id) {
+    const p = getPat(id);
+    if (!p) return;
+    if (!confirm('「' + p.name + '」を削除しますか？')) return;
+    await del('patterns', id);
+    state.patterns = state.patterns.filter((x) => x.id !== id);
+    renderHome(); renderFolder0();
+  }
+  async function deleteFolder(id) {
+    const f = getFol(id);
+    if (!f) return;
+    const kids = patsIn(id);
+    const msg = kids.length
+      ? 'フォルダ「' + f.name + '」を削除しますか？\n中の' + kids.length + '個のパターンは外に出ます。'
+      : 'フォルダ「' + f.name + '」を削除しますか？';
+    if (!confirm(msg)) return;
+    let base = topItems().length;
+    for (const k of kids) { k.folderId = null; k.order = base++; await save(k); }
+    await del('folders', id);
+    state.folders = state.folders.filter((x) => x.id !== id);
+    renderHome();
+  }
+  async function moveOutOfFolder(id) {
+    const p = getPat(id);
+    if (!p) return;
+    p.folderId = null;
+    p.order = topItems().length;
+    await save(p);
+    renderFolder();
+    toast('「' + p.name + '」を外に出しました');
+  }
+  function renderFolder0() { if (state.currentFolderId) renderFolder(); }
+
+  // ---------- シート ----------
+  function openSheet(pattern, presetFolderId) {
+    sheetCtx = {
+      type: 'pattern',
+      id: pattern ? pattern.id : null,
+      emoji: pattern ? pattern.emoji : EMOJIS[0],
+      useAlways: pattern ? pattern.useAlways !== false : true,
+      folderId: pattern ? (folderExists(pattern.folderId) ? pattern.folderId : null) : (presetFolderId || null)
+    };
+    $('#sheetTitle').textContent = pattern ? 'パターンを編集' : 'パターンを追加';
+    $('#sheetName').value = pattern ? pattern.name : '';
+    $('#sheetName').placeholder = '名前（例: ジム）';
+    $('#patternOnly').style.display = 'block';
+    $('#sheetDel').style.display = pattern ? 'block' : 'none';
+    $('#alwaysSw').classList.toggle('on', sheetCtx.useAlways);
+    renderEmoPick();
+    renderFolderChips();
+    $('#sheetBg').classList.add('show');
+    if (!pattern) setTimeout(() => $('#sheetName').focus(), 250);
+  }
+  function openFolderSheet(folder) {
+    sheetCtx = { type: 'folder', id: folder ? folder.id : null };
+    $('#sheetTitle').textContent = folder ? 'フォルダを編集' : 'フォルダを追加';
+    $('#sheetName').value = folder ? folder.name : '';
+    $('#sheetName').placeholder = '名前（例: 旅行）';
+    $('#patternOnly').style.display = 'none';
+    $('#sheetDel').style.display = folder ? 'block' : 'none';
+    $('#sheetBg').classList.add('show');
+    if (!folder) setTimeout(() => $('#sheetName').focus(), 250);
+  }
+  function renderEmoPick() {
+    const wrap = $('#emoPick');
+    wrap.innerHTML = '';
+    for (const e of EMOJIS) {
+      const b = document.createElement('button');
+      b.textContent = e;
+      b.className = e === sheetCtx.emoji ? 'sel' : '';
+      b.addEventListener('click', () => { sheetCtx.emoji = e; renderEmoPick(); });
+      wrap.appendChild(b);
+    }
+  }
+  function renderFolderChips() {
+    const wrap = $('#folderChips');
+    wrap.innerHTML = '';
+    const mk = (label, id) => {
+      const b = document.createElement('button');
+      b.textContent = label;
+      b.className = sheetCtx.folderId === id ? 'sel' : '';
+      b.addEventListener('click', () => { sheetCtx.folderId = id; renderFolderChips(); });
+      return b;
+    };
+    wrap.appendChild(mk('入れない', null));
+    for (const f of state.folders.slice().sort(byOrder)) wrap.appendChild(mk('📁 ' + f.name, f.id));
+  }
+  function closeSheet() { $('#sheetBg').classList.remove('show'); sheetCtx = null; }
+
+  async function commitSheet() {
+    const name = $('#sheetName').value.trim();
+    if (!name) { $('#sheetName').focus(); return; }
+
+    if (sheetCtx.type === 'folder') {
+      if (sheetCtx.id) {
+        const f = getFol(sheetCtx.id);
+        f.name = name; await saveFol(f);
+      } else {
+        const f = { id: uid(), name, order: topItems().length, updatedAt: Date.now() };
+        await saveFol(f);
+        state.folders.push(f);
+      }
+    } else {
+      const fid = folderExists(sheetCtx.folderId) ? sheetCtx.folderId : null;
+      if (sheetCtx.id) {
+        const p = getPat(sheetCtx.id);
+        const moved = (p.folderId || null) !== fid;
+        p.name = name; p.emoji = sheetCtx.emoji; p.useAlways = sheetCtx.useAlways;
+        if (moved) { p.folderId = fid; p.order = fid ? patsIn(fid).length : topItems().length; }
+        await save(p);
+      } else {
+        const np = {
+          id: uid(), name, emoji: sheetCtx.emoji,
+          order: fid ? patsIn(fid).length : topItems().length,
+          items: [], useAlways: sheetCtx.useAlways, folderId: fid,
+          session: null, lastDepartedAt: null, updatedAt: Date.now()
+        };
+        await put('patterns', np);
+        state.patterns.push(np);
+      }
+    }
+    closeSheet();
+    renderHome(); renderFolder0();
+  }
+
+  async function sheetDelete() {
+    if (!sheetCtx || !sheetCtx.id) return;
+    const { type, id } = sheetCtx;
+    closeSheet();
+    if (type === 'folder') await deleteFolder(id);
+    else await deletePattern(id);
+  }
+
+  // ---------- 画面遷移 ----------
+  function show(viewId) {
+    ['homeView', 'folderView', 'listView'].forEach((v) => {
+      $('#' + v).classList.toggle('active', v === viewId);
+    });
+  }
+  function openFolder(id) {
+    state.currentFolderId = id;
+    state.editFolder = false;
+    renderFolder();
+    show('folderView');
+    $('#folderGrid').scrollTop = 0;
+  }
+  function openList(id, from) {
+    state.currentId = id;
+    state.backTo = from || 'home';
+    state.editList = false;
+    renderList();
+    show('listView');
+    $('#listScroll').scrollTop = 0;
+  }
+  function goBackFromList() {
+    state.currentId = null;
+    state.editList = false;
+    if (state.backTo === 'folder' && state.currentFolderId) { renderFolder(); show('folderView'); }
+    else { renderHome(); show('homeView'); }
+  }
+  function goHome() {
+    state.currentFolderId = null;
+    state.editFolder = false;
+    document.body.classList.toggle('editing', state.editHome);
+    renderHome();
+    show('homeView');
+  }
+
+  let toastTimer = null;
+  function toast(msg) {
+    const t = $('#toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+
+  // ---------- バインド ----------
+  function bind() {
+    $('#homeEditBtn').addEventListener('click', () => { state.editHome = !state.editHome; renderHome(); });
+    $('#alwaysCard').addEventListener('click', () => openList(ALWAYS_ID, 'home'));
+    $('#folderBackBtn').addEventListener('click', goHome);
+    $('#folderEditBtn').addEventListener('click', () => { state.editFolder = !state.editFolder; renderFolder(); });
+    $('#backBtn').addEventListener('click', goBackFromList);
+    $('#listEditBtn').addEventListener('click', () => { state.editList = !state.editList; renderList(); });
+    $('#goBtn').addEventListener('click', depart);
+    $('#clearBtn').addEventListener('click', clearChecks);
+    $('#wipeAllBtn').addEventListener('click', clearAllChecks);
+    $('#sheetCancel').addEventListener('click', closeSheet);
+    $('#sheetOk').addEventListener('click', commitSheet);
+    $('#sheetDel').addEventListener('click', sheetDelete);
+    $('#alwaysSw').addEventListener('click', () => {
+      sheetCtx.useAlways = !sheetCtx.useAlways;
+      $('#alwaysSw').classList.toggle('on', sheetCtx.useAlways);
+    });
+    $('#sheetBg').addEventListener('click', (e) => { if (e.target === $('#sheetBg')) closeSheet(); });
+    $('#sheetName').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commitSheet(); } });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && state.currentId) renderList();
+    });
+  }
+
+  // ---------- JSON 書き出し/取り込み ----------
+  const SCHEMA = 'ittekimasu.v1';
+  async function exportData() {
+    const data = { schema: SCHEMA, exportedAt: new Date().toISOString(), items: state.patterns, folders: state.folders };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'ittekimasu-sync.json';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  async function importData(file) {
+    const data = JSON.parse(await file.text());
+    if (data.schema !== SCHEMA) return;
+    const pById = new Map(state.patterns.map((n) => [n.id, n]));
+    for (const it of (data.items || [])) {
+      const local = pById.get(it.id);
+      if (!local || (it.updatedAt || 0) > (local.updatedAt || 0)) await put('patterns', it);
+    }
+    const fById = new Map(state.folders.map((n) => [n.id, n]));
+    for (const it of (data.folders || [])) {
+      const local = fById.get(it.id);
+      if (!local || (it.updatedAt || 0) > (local.updatedAt || 0)) await put('folders', it);
+    }
+    state.patterns = await getAll('patterns');
+    state.folders = await getAll('folders');
+    renderHome();
+  }
+  window.ittekimasu = { exportData, importData };
+
+  // ---------- 起動 ----------
+  (async function init() {
+    setupViewportTracking();
+    await openDB();
+    await loadAll();
+    bind();
+    renderHome();
+    renderVersionLabel();
+  })();
+
+  // ---------- visualViewport（キーボード対策） ----------
+  function setupViewportTracking() {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const root = document.documentElement;
+    let baseHeight = vv.height;
+    function apply() {
+      root.style.setProperty('--app-height', vv.height + 'px');
+      document.body.classList.toggle('keyboard-open', vv.height < baseHeight - 120);
+    }
+    vv.addEventListener('resize', apply);
+    vv.addEventListener('scroll', apply);
+    window.addEventListener('orientationchange', () => { setTimeout(() => { baseHeight = vv.height; apply(); }, 300); });
+    apply();
+  }
+
+  // ---------- Service Worker + 自動アップデート ----------
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', async () => {
+      try {
+        const swUrl = new URL('sw.js', location.href).href;
+        const res = await fetch(swUrl, { method: 'HEAD' });
+        if (!res.ok) return;
+        const reg = await navigator.serviceWorker.register('sw.js');
+        if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner(reg.waiting);
+        reg.addEventListener('updatefound', () => {
+          const sw = reg.installing;
+          if (!sw) return;
+          sw.addEventListener('statechange', () => {
+            if (sw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner(sw);
+          });
+        });
+        reg.update();
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update(); });
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          if (refreshing) return; refreshing = true; window.location.reload();
+        });
+      } catch (e) {}
+    });
+  }
+  function showUpdateBanner(waitingSW) {
+    if (document.getElementById('updateBanner')) return;
+    const b = document.createElement('button');
+    b.id = 'updateBanner';
+    b.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg><span>新しいバージョンがあります — タップで更新</span>';
+    b.addEventListener('click', () => {
+      b.disabled = true; b.querySelector('span').textContent = '更新中…';
+      waitingSW.postMessage('SKIP_WAITING');
+    });
+    document.body.appendChild(b);
+    requestAnimationFrame(() => b.classList.add('show'));
+  }
+</script>
+</body>
+</html>
