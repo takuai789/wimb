@@ -5,7 +5,7 @@
 // - アイコン等の静的アセットはキャッシュ優先（速さ重視）
 // CACHE の数字を上げるたびに「新しいバージョン」として検知される。
 // リリース時は index.html の APP_VERSION と必ずセットで上げること。
-const CACHE = 'wimb-v1-7-0';
+const CACHE = 'wimb-v2-2-0';
 const ASSETS = [
   './',
   './index.html',
