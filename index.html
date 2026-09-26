@@ -99,6 +99,28 @@
   .always-card .tx span { font-size: 12px; color: var(--secondary); }
   .chev { color: var(--tertiary); flex-shrink: 0; }
 
+  .always-card.combo.active {
+    box-shadow: 0 1px 4px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(232,203,128,0.35);
+    background: rgba(232,203,128,0.10);
+  }
+  .picker { max-height: 46vh; overflow-y: auto; background: var(--field); border-radius: 12px; }
+  .pick-folder { font-size: 11px; font-weight: 600; color: var(--secondary); padding: 10px 16px 4px; }
+  .pick-row {
+    display: flex; align-items: center; gap: 12px; padding: 13px 16px; width: 100%;
+    background: transparent; border: 0; border-bottom: 0.5px solid var(--sep);
+    font-family: inherit; font-size: 16px; color: var(--ink); text-align: left; cursor: pointer;
+  }
+  .pick-row:last-child { border-bottom: 0; }
+  .pick-row .ck {
+    width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid var(--tertiary); display: flex; align-items: center; justify-content: center;
+    color: var(--on-gold);
+  }
+  .pick-row .ck svg { opacity: 0; }
+  .pick-row.on .ck { background: var(--amber); border-color: var(--amber); }
+  .pick-row.on .ck svg { opacity: 1; }
+  .pick-row .nm { flex: 1; min-width: 0; }
+  .pick-row .cnt { font-size: 12px; color: var(--secondary); flex-shrink: 0; }
   .sec-label {
     font-size: 12px; color: var(--secondary); font-weight: 600;
     padding: 16px 20px 8px; letter-spacing: 0.02em;
@@ -164,6 +186,31 @@
   .pat-card.drop-target { outline: 2.5px solid var(--blue); outline-offset: 2px; }
 
   .hint { text-align: center; font-size: 13px; color: var(--secondary); padding: 8px 32px 4px; line-height: 1.6; }
+  /* ---------- 設定画面 ---------- */
+  .set-group { margin: 16px 16px 10px; }
+  .set-group > h3 { font-size: 12px; font-weight: 600; color: var(--secondary); padding: 6px 4px 8px; }
+  .set-list { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+  .set-row {
+    display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    border-bottom: 0.5px solid var(--sep); width: 100%;
+    background: transparent; border-left: 0; border-right: 0; border-top: 0;
+    font-family: inherit; font-size: 16px; color: var(--ink); text-align: left; cursor: pointer;
+  }
+  .set-row:last-child { border-bottom: 0; }
+  .set-row.static { cursor: default; }
+  .set-row .tl { flex: 1; min-width: 0; }
+  .set-row .tl b { display: block; font-weight: 500; font-size: 16px; }
+  .set-row .tl span { display: block; font-size: 12px; color: var(--secondary); margin-top: 3px; line-height: 1.55; }
+  .set-row .val { font-size: 14px; color: var(--secondary); flex-shrink: 0; }
+  .set-row.gold .tl b { color: var(--amber); font-weight: 600; }
+  .set-note { font-size: 12px; color: var(--tertiary); line-height: 1.7; padding: 2px 22px 0; }
+  .data-note { font-size: 13px; color: var(--secondary); line-height: 1.7; margin-bottom: 16px; }
+  .data-actions { display: flex; flex-direction: column; gap: 10px; }
+  .data-actions button {
+    width: 100%; border: 0; border-radius: 12px; padding: 15px;
+    font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+  }
+  .data-last { text-align: center; font-size: 12px; color: var(--tertiary); margin-top: 14px; }
   .wipe-btn {
     display: block; margin: 10px auto 0; background: transparent;
     border: 1px solid var(--sep); border-radius: 999px;
@@ -201,7 +248,18 @@
     border-bottom: 0.5px solid var(--sep); cursor: pointer;
     background: transparent; border-left: 0; border-right: 0; border-top: 0;
     width: 100%; font-family: inherit; font-size: 16px; color: var(--ink); text-align: left;
+    touch-action: manipulation;   /* ダブルタップでズームさせない */
+    transition: background 0.12s;
   }
+  /* 1回目のタップ: 「もう一度」の待ち状態 */
+  .row.armed { background: rgba(232,203,128,0.10); }
+  .row.armed .ck { border-color: var(--amber); transform: scale(1.1); }
+  .row .ck { transition: background 0.15s, border-color 0.15s, transform 0.12s; }
+  .row .again {
+    font-size: 11px; font-weight: 600; color: var(--amber); flex-shrink: 0;
+    opacity: 0; transition: opacity 0.12s;
+  }
+  .row.armed .again { opacity: 1; }
   .row:last-child { border-bottom: 0; }
   .row .ck {
     width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
@@ -225,6 +283,25 @@
   }
   .add-row .plus { width: 26px; height: 26px; color: var(--amber); flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .empty { padding: 26px 20px; text-align: center; color: var(--tertiary); font-size: 14px; line-height: 1.7; }
+  /* 追加時の名寄せサジェスト */
+  .sug { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 16px 12px; border-top: 0.5px solid var(--sep); }
+  .sug .cap { font-size: 12px; color: var(--secondary); width: 100%; }
+  .sug button {
+    background: rgba(232,203,128,0.16); color: var(--amber); border: 0; border-radius: 999px;
+    padding: 8px 14px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  /* 名寄せ画面 */
+  .mg-card { margin: 12px 16px; background: var(--card); border-radius: 14px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+  .mg-card .names { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  .mg-card .names span {
+    background: var(--field); border-radius: 999px; padding: 7px 12px; font-size: 14px;
+  }
+  .mg-card .names span small { color: var(--secondary); font-size: 11px; margin-left: 4px; }
+  .mg-card button {
+    width: 100%; border: 0; border-radius: 10px; padding: 11px;
+    background: rgba(232,203,128,0.16); color: var(--amber);
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
 
   .footer { padding: 10px 16px calc(12px + var(--safe-bottom)); background: rgba(27,38,70,0.86); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--sep); }
   .go-btn {
@@ -326,7 +403,9 @@
   <!-- ========== ホーム ========== -->
   <div id="homeView" class="view active">
     <div class="navbar">
-      <span style="width:44px;"></span>
+      <button class="icon-btn" id="settingsBtn" aria-label="データ">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
       <span class="title">WIMB</span>
       <button class="icon-btn wide" id="homeEditBtn">編集</button>
     </div>
@@ -341,11 +420,21 @@
         </div>
         <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       </div>
+      <div class="always-card combo" id="comboCard">
+        <div class="ring">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        </div>
+        <div class="tx">
+          <b id="comboTitle">複数の予定をまとめる</b>
+          <span id="comboSub">明日は仕事とジム、みたいな日に</span>
+        </div>
+        <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </div>
       <div class="sec-label">パターン</div>
       <div class="grid" id="homeGrid"></div>
       <div class="hint" id="homeHint"></div>
       <button class="wipe-btn" id="wipeAllBtn" style="display:none;"></button>
-      <div class="version" id="versionLabel"></div>
+      <div style="height:16px;"></div>
     </div>
   </div>
 
@@ -387,6 +476,103 @@
         <span id="goText">出発</span>
       </button>
       <button class="clear-btn" id="clearBtn">ぜんぶ外す</button>
+      <button class="clear-btn" id="cancelComboBtn" style="display:none;">まとめをやめる</button>
+    </div>
+  </div>
+
+  <!-- ========== 名寄せ ========== -->
+  <div id="mergeView" class="view">
+    <div class="navbar">
+      <button class="icon-btn" id="mergeBackBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="title">名寄せ</span>
+      <span style="width:44px;"></span>
+    </div>
+    <div class="scroll" id="mergeScroll"></div>
+  </div>
+
+  <!-- ========== 設定 ========== -->
+  <div id="settingsView" class="view">
+    <div class="navbar">
+      <button class="icon-btn" id="setBackBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="title">設定</span>
+      <span style="width:44px;"></span>
+    </div>
+    <div class="scroll">
+
+      <div class="set-group">
+        <h3>いつもの</h3>
+        <div class="set-list">
+          <div class="set-row static">
+            <div class="tl">
+              <b>「いつもの」を使う</b>
+              <span>財布・鍵など毎回持つものを、各パターンの先頭に自動で出します</span>
+            </div>
+            <button class="sw" id="useAlwaysSw"></button>
+          </div>
+          <button class="set-row" id="mergeRow" style="display:none;">
+            <div class="tl">
+              <b>似ている持ち物をまとめる</b>
+              <span id="mergeRowSub">—</span>
+            </div>
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+          <button class="set-row" id="editAlwaysRow">
+            <div class="tl">
+              <b>中身を編集</b>
+              <span id="alwaysItemsLabel">—</span>
+            </div>
+            <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+          </button>
+        </div>
+        <div class="set-note" id="useAlwaysNote"></div>
+      </div>
+
+      <div class="set-group">
+        <h3>チェック</h3>
+        <div class="set-list">
+          <div class="set-row static">
+            <div class="tl">
+              <b>ダブルタップで消す</b>
+              <span>うっかり触っても変わらないように、2回タップで切り替えます</span>
+            </div>
+            <button class="sw" id="doubleTapSw"></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="set-group">
+        <h3>データ</h3>
+        <div class="set-list">
+          <button class="set-row gold" id="exportRow">
+            <div class="tl">
+              <b>バックアップを書き出す</b>
+              <span id="lastExportLabel">—</span>
+            </div>
+          </button>
+          <button class="set-row" id="importRow">
+            <div class="tl">
+              <b>バックアップから復元する</b>
+              <span>今の中身は、バックアップの内容に置き換わります</span>
+            </div>
+          </button>
+        </div>
+        <div class="set-note">持ち物はこの端末の中だけに保存されます。機種変更やブラウザのデータ削除で消えるので、ときどき書き出しておくと安心です。</div>
+      </div>
+
+      <div class="set-group">
+        <h3>このアプリ</h3>
+        <div class="set-list">
+          <div class="set-row static"><div class="tl"><b>バージョン</b></div><span class="val" id="setVersion"></span></div>
+          <div class="set-row static"><div class="tl"><b>入っているもの</b></div><span class="val" id="setStats"></span></div>
+        </div>
+      </div>
+
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none;" />
+      <div style="height:24px;"></div>
     </div>
   </div>
 </div>
@@ -398,7 +584,7 @@
     <input class="nm" id="sheetName" type="text" placeholder="名前（例: ジム）" maxlength="16" />
     <div id="patternOnly">
       <div class="emo-pick" id="emoPick"></div>
-      <div class="toggle-row">
+      <div class="toggle-row" id="alwaysToggleRow">
         <div>
           <div class="tl">「いつもの」を足す</div>
           <div class="ts">財布・鍵などを先頭に自動表示</div>
@@ -413,6 +599,31 @@
       <button class="btn-ok" id="sheetOk">保存</button>
     </div>
     <button class="btn-del" id="sheetDel" style="display:none;">削除</button>
+  </div>
+</div>
+
+<!-- 名寄せの表記を選ぶシート -->
+<div class="sheet-bg" id="mergeSheetBg">
+  <div class="sheet">
+    <h2>どの言い方に揃えますか？</h2>
+    <p class="data-note">選んだ言い方に、他の書き方を全部まとめます。次から似た名前を入れたときも、この言い方を出します。</p>
+    <div class="chips" id="mergeChips"></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="mergeCancel">やめる</button>
+      <button class="btn-ok" id="mergeOk">まとめる</button>
+    </div>
+  </div>
+</div>
+
+<!-- まとめる予定を選ぶシート -->
+<div class="sheet-bg" id="pickerBg">
+  <div class="sheet">
+    <h2>まとめる予定を選ぶ</h2>
+    <div class="picker" id="pickerList"></div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" id="pickerCancel">やめる</button>
+      <button class="btn-ok" id="pickerOk">まとめる</button>
+    </div>
   </div>
 </div>
 
@@ -450,16 +661,154 @@
   function getAll(store) { return new Promise((res, rej) => { const r = tx(store).getAll(); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); }
   function put(store, val) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').put(val); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
   function del(store, id) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').delete(id); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
+  function clearStore(store) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '1.7.0';
+  const APP_VERSION = '2.2.0';
   function renderVersionLabel() {
-    const el = document.getElementById('versionLabel');
+    const el = document.getElementById('setVersion');
     if (el) el.textContent = 'v' + APP_VERSION;
   }
 
   // ---------- 定数 ----------
   const ALWAYS_ID = 'always';
+  // 端末ごとの設定。バックアップにも含めて持ち運べるようにしてある。
+  // 「まとめ」＝複数の予定をその場で束ねた一時的なチェックリスト。
+  // 夜に作って翌朝使うので、日付が変わってもリセットしない（出発か取り消しで消える）。
+  const COMBO_ID = '__combo__';
+  const COMBO_KEY = 'ittekimasu.combo';
+  let combo = null;   // { ids: [patternId], checks: [itemId] }
+  function loadCombo() {
+    try { combo = JSON.parse(localStorage.getItem(COMBO_KEY) || 'null'); } catch (e) { combo = null; }
+    if (!combo || !Array.isArray(combo.ids)) combo = null;
+  }
+  function saveCombo() {
+    try {
+      if (combo && combo.ids.length) localStorage.setItem(COMBO_KEY, JSON.stringify(combo));
+      else localStorage.removeItem(COMBO_KEY);
+    } catch (e) {}
+  }
+  function comboPatterns() {
+    return (combo ? combo.ids : []).map(getPat).filter(Boolean);
+  }
+  // 予定ごとに見出しを分ける。「いつもの」だけは先頭に1回だけ出す。
+  function comboGroups() {
+    const pats = comboPatterns();
+    const groups = [];
+    if (settings.useAlways && pats.some((p) => p.useAlways)) {
+      groups.push({ id: ALWAYS_ID, title: 'いつもの', tag: true, items: always().items });
+    }
+    for (const p of pats) groups.push({ id: p.id, title: p.emoji + ' ' + p.name, tag: false, items: p.items });
+    return groups;
+  }
+  function comboCounts() {
+    const checks = new Set((combo && combo.checks) || []);
+    const groups = comboGroups();
+    const total = groups.reduce((n, g) => n + g.items.length, 0);
+    const done = groups.reduce((n, g) => n + g.items.filter((i) => checks.has(i.id)).length, 0);
+    return { total, done, checks, groups };
+  }
+
+  // ---------- 名寄せ ----------
+  // 表記ゆれ（診察券／診察カード）を同じものとして扱うための判定と、確定した言い換えの記録。
+  const ALIAS_KEY = 'ittekimasu.aliases';
+  let aliases = {};   // 正規化した書き方 -> 揃える先のラベル
+  function loadAliases() {
+    try { aliases = JSON.parse(localStorage.getItem(ALIAS_KEY) || '{}') || {}; } catch (e) { aliases = {}; }
+  }
+  function saveAliases() {
+    try { localStorage.setItem(ALIAS_KEY, JSON.stringify(aliases)); } catch (e) {}
+  }
+
+  // 全角→半角、ひらがな→カタカナ、長音や中黒を落として比べる
+  function normName(v) {
+    return String(v || '').trim()
+      .replace(/[\u3000\s]+/g, '')
+      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xFEE0))
+      .replace(/[ー－―‐\-]/g, '')
+      .replace(/[・･,、.。]/g, '')
+      .replace(/[ぁ-ゖ]/g, (c) => String.fromCharCode(c.charCodeAt(0) + 0x60))
+      .toLowerCase();
+  }
+  function bigrams(v) {
+    const out = new Set();
+    if (v.length < 2) { out.add(v); return out; }
+    for (let i = 0; i < v.length - 1; i++) out.add(v.slice(i, i + 2));
+    return out;
+  }
+  function dice(a, b) {
+    const A = bigrams(a), B = bigrams(b);
+    let n = 0;
+    for (const x of A) if (B.has(x)) n++;
+    return (2 * n) / (A.size + B.size);
+  }
+  function similarName(a, b) {
+    const x = normName(a), y = normName(b);
+    if (!x || !y) return false;
+    if (x === y) return true;
+    if (x.length < 2 || y.length < 2) return false;   // 「水」と「水筒」を同一視しない
+    if (x.includes(y) || y.includes(x)) return true;
+    let cp = 0;
+    while (cp < x.length && cp < y.length && x[cp] === y[cp]) cp++;
+    if (cp >= 2 && cp / Math.min(x.length, y.length) >= 0.5) return true;
+    return dice(x, y) >= 0.6;
+  }
+  // 全パターンに出てくる持ち物の名前と、その使われている数
+  function labelCounts() {
+    const m = new Map();
+    for (const p of state.patterns) {
+      for (const it of p.items) {
+        const k = normName(it.label);
+        if (!k) continue;
+        const e = m.get(k) || { label: it.label, count: 0 };
+        e.count++;
+        m.set(k, e);
+      }
+    }
+    return m;
+  }
+  // 似ている名前どうしをまとめたグループ（2つ以上のときだけ）
+  function mergeGroups() {
+    const entries = Array.from(labelCounts().values());
+    const parent = entries.map((_, i) => i);
+    const find = (i) => (parent[i] === i ? i : (parent[i] = find(parent[i])));
+    for (let i = 0; i < entries.length; i++) {
+      for (let j = i + 1; j < entries.length; j++) {
+        if (similarName(entries[i].label, entries[j].label)) parent[find(i)] = find(j);
+      }
+    }
+    const byRoot = new Map();
+    entries.forEach((e, i) => {
+      const r = find(i);
+      if (!byRoot.has(r)) byRoot.set(r, []);
+      byRoot.get(r).push(e);
+    });
+    return Array.from(byRoot.values())
+      .filter((g) => g.length > 1)
+      .map((g) => g.sort((a, b) => b.count - a.count));
+  }
+  // 入力中の名前に似ている、既にある名前（多い順に最大3つ）
+  function suggestionsFor(text) {
+    const k = normName(text);
+    if (k.length < 2) return [];
+    return Array.from(labelCounts().values())
+      .filter((e) => normName(e.label) !== k && similarName(text, e.label))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 3);
+  }
+  function applyAlias(label) {
+    const hit = aliases[normName(label)];
+    return hit && normName(hit) !== normName(label) ? hit : null;
+  }
+
+  const SETTINGS_KEY = 'ittekimasu.settings';
+  const settings = { useAlways: true, doubleTap: true };
+  function loadSettings() {
+    try { Object.assign(settings, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); } catch (e) {}
+  }
+  function saveSettings() {
+    try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
+  }
   const EMOJIS = ['🏋️','💼','🎤','🛒','☕️','🚃','🏥','🎒','🌙','📷','🍺','⚽️','✈️','🧺','🎬','🏃','🍽️','🐟'];
 
   // ---------- State ----------
@@ -549,7 +898,7 @@
   }
   function visibleItems(p) {
     const out = [];
-    if (p.id !== ALWAYS_ID && p.useAlways) {
+    if (settings.useAlways && p.id !== ALWAYS_ID && p.useAlways) {
       for (const it of always().items) out.push({ item: it, from: ALWAYS_ID });
     }
     for (const it of p.items) out.push({ item: it, from: p.id });
@@ -600,6 +949,8 @@
   // ---------- ホーム描画 ----------
   function renderHome() {
     const a = always();
+    $('#alwaysCard').style.display = settings.useAlways ? 'flex' : 'none';
+    renderComboCard();
     $('#alwaysSub').textContent = a.items.length ? a.items.map((i) => i.label).join('・') : 'タップして登録';
 
     const grid = $('#homeGrid');
@@ -629,12 +980,29 @@
     $('#homeHint').textContent = state.editHome ? 'ドラッグで並べ替え・タップで名前の変更' : '';
 
     // チェックが残っているパターンがあるときだけ、一括で外すボタンを出す
-    const dirty = checkedPatterns();
+    const dirtyCount = checkedPatterns().length + (comboHasChecks() ? 1 : 0);
     const wipe = $('#wipeAllBtn');
-    wipe.style.display = (dirty.length && !state.editHome) ? 'block' : 'none';
-    wipe.textContent = 'すべてのチェックを外す（' + dirty.length + 'パターン）';
+    wipe.style.display = (dirtyCount && !state.editHome) ? 'block' : 'none';
+    wipe.textContent = 'すべてのチェックを外す（' + dirtyCount + '件）';
 
     if (state.editHome) attachDrag(grid, commitHomeOrder);
+  }
+
+  function renderComboCard() {
+    const card = $('#comboCard');
+    const pats = comboPatterns();
+    if (!pats.length) {
+      card.classList.remove('active');
+      $('#comboTitle').textContent = '複数の予定をまとめる';
+      $('#comboSub').textContent = '明日は仕事とジム、みたいな日に';
+      return;
+    }
+    card.classList.add('active');
+    $('#comboTitle').textContent = 'まとめ中: ' + pats.map((p) => p.name).join('・');
+    const { total, done } = comboCounts();
+    const rest = total - done;
+    $('#comboSub').textContent = total === 0 ? '持ち物がありません'
+      : (rest === 0 ? 'ぜんぶそろいました' : 'あと ' + rest + 'つ');
   }
 
   function addCard(emo, label, onClick) {
@@ -802,7 +1170,39 @@
   }
 
   // ---------- チェック画面描画 ----------
+  function renderComboList() {
+    const pats = comboPatterns();
+    if (!pats.length) { goHome(); return; }
+    $('#listTitle').textContent = 'まとめ';
+    $('#listEditBtn').textContent = '変更';
+    $('#listEditBtn').classList.remove('done');
+    $('#listEditBtn').style.visibility = 'visible';
+
+    const { total, done, checks, groups } = comboCounts();
+    const rest = total - done;
+    $('#progressWrap').style.display = 'block';
+    $('#listFooter').style.display = 'block';
+    $('#progLeft').textContent = total === 0 ? '持ち物がありません'
+      : (rest === 0 ? 'ぜんぶそろいました' : 'あと ' + rest + 'つ');
+    $('#progRight').textContent = total === 0 ? '' : done + ' / ' + total;
+    $('#progBar').classList.toggle('done', total > 0 && rest === 0);
+    $('#progBar').firstElementChild.style.width = (total ? (done / total) * 100 : 0) + '%';
+    $('#goBtn').disabled = !(total > 0 && rest === 0);
+    $('#goText').textContent = rest === 0 && total > 0 ? 'いってきます 👋' : '出発';
+    $('#clearBtn').style.visibility = done > 0 ? 'visible' : 'hidden';
+    $('#cancelComboBtn').style.display = 'block';
+
+    const scroll = $('#listScroll');
+    scroll.innerHTML = '';
+    for (const g of groups) scroll.appendChild(groupEl(g.title, g.items, g.id, checks, false, g.tag));
+    const pad = document.createElement('div');
+    pad.style.height = '10px';
+    scroll.appendChild(pad);
+  }
+
   function renderList() {
+    if (state.currentId === COMBO_ID) return renderComboList();
+    $('#cancelComboBtn').style.display = 'none';
     const p = getPat(state.currentId);
     if (!p) return;
     const isAlways = p.id === ALWAYS_ID;
@@ -833,7 +1233,7 @@
 
     const scroll = $('#listScroll');
     scroll.innerHTML = '';
-    if (!isAlways && p.useAlways) {
+    if (settings.useAlways && !isAlways && p.useAlways) {
       scroll.appendChild(groupEl('いつもの', always().items, ALWAYS_ID, checks, editing, true));
     }
     scroll.appendChild(groupEl(isAlways ? '毎回もつもの' : 'このお出かけ', p.items, p.id, checks, editing, false));
@@ -879,8 +1279,9 @@
       } else {
         row.innerHTML =
           '<span class="ck"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>' +
-          '<span class="lb">' + esc(it.label) + '</span>';
-        row.addEventListener('click', () => toggle(it.id));
+          '<span class="lb">' + esc(it.label) + '</span>' +
+          '<span class="again">もう一度</span>';
+        row.addEventListener('click', () => onRowTap(it.id, row));
       }
       list.appendChild(row);
     }
@@ -892,16 +1293,46 @@
         '<span class="plus"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span>' +
         '<input type="text" placeholder="持ち物を追加" maxlength="24" enterkeyhint="done" />';
       const inp = ar.querySelector('input');
+      const sug = document.createElement('div');
+      sug.className = 'sug';
+      sug.style.display = 'none';
       const commit = () => {
         const v = inp.value.trim();
         if (!v) return;
         inp.value = '';
+        sug.style.display = 'none';
+        const canon = applyAlias(v);
+        if (canon) { addItem(ownerId, canon); toast('「' + canon + '」にしました'); return; }
         addItem(ownerId, v);
       };
       inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); commit(); } });
-      inp.addEventListener('blur', commit);
+      inp.addEventListener('blur', () => setTimeout(commit, 150));   // サジェストを押す間だけ待つ
+      inp.addEventListener('input', () => {
+        const list2 = suggestionsFor(inp.value);
+        sug.innerHTML = '';
+        if (!list2.length) { sug.style.display = 'none'; return; }
+        const cap = document.createElement('div');
+        cap.className = 'cap';
+        cap.textContent = 'もしかして';
+        sug.appendChild(cap);
+        for (const e of list2) {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = e.label;
+          b.addEventListener('mousedown', (ev) => ev.preventDefault());
+          b.addEventListener('click', () => {
+            inp.value = '';
+            sug.innerHTML = '';
+            sug.style.display = 'none';
+            addItem(ownerId, e.label);
+          });
+          sug.appendChild(b);
+        }
+        sug.style.display = 'flex';
+      });
       ar.querySelector('.plus').addEventListener('click', () => inp.focus());
       list.appendChild(ar);
+      list.appendChild(sug);
     }
 
     g.appendChild(list);
@@ -909,7 +1340,38 @@
   }
 
   // ---------- 操作 ----------
+  // ダブルタップ判定。1回目は .armed を付けて「もう一度」を出し、少し待って戻す。
+  const DOUBLE_MS = 500;
+  let armed = { id: null, at: 0 };
+  let armedTimer = null;
+  function disarm() {
+    armed = { id: null, at: 0 };
+    clearTimeout(armedTimer);
+    document.querySelectorAll('.row.armed').forEach((r) => r.classList.remove('armed'));
+  }
+  function onRowTap(itemId, rowEl) {
+    if (!settings.doubleTap) { toggle(itemId); return; }
+    const now = Date.now();
+    if (armed.id === itemId && now - armed.at < DOUBLE_MS) {
+      disarm();
+      toggle(itemId);
+      return;
+    }
+    disarm();
+    armed = { id: itemId, at: now };
+    rowEl.classList.add('armed');
+    armedTimer = setTimeout(disarm, DOUBLE_MS);
+  }
+
   async function toggle(itemId) {
+    if (state.currentId === COMBO_ID) {
+      const set = new Set((combo.checks || []));
+      if (set.has(itemId)) set.delete(itemId); else set.add(itemId);
+      combo.checks = Array.from(set);
+      saveCombo();
+      renderList();
+      return;
+    }
     const p = getPat(state.currentId);
     const set = activeChecks(p);
     if (set.has(itemId)) set.delete(itemId); else set.add(itemId);
@@ -917,6 +1379,7 @@
     renderList();
   }
   async function clearChecks() {
+    if (state.currentId === COMBO_ID) { combo.checks = []; saveCombo(); renderList(); return; }
     const p = getPat(state.currentId);
     await setChecks(p, new Set());
     renderList();
@@ -925,16 +1388,21 @@
   function checkedPatterns() {
     return state.patterns.filter((p) => activeChecks(p).size > 0);
   }
+  function comboHasChecks() { return !!(combo && (combo.checks || []).length && comboPatterns().length); }
   async function clearAllChecks() {
     const dirty = checkedPatterns();
-    if (!dirty.length) return;
-    const names = dirty.map((p) => p.name).join('・');
-    if (!confirm(dirty.length + 'つのパターンのチェックを外します。\n' + names)) return;
+    const withCombo = comboHasChecks();
+    const n = dirty.length + (withCombo ? 1 : 0);
+    if (!n) return;
+    const names = dirty.map((p) => p.name).concat(withCombo ? ['まとめ'] : []).join('・');
+    if (!confirm(n + 'つのチェックを外します。\n' + names)) return;
     for (const p of dirty) { p.session = null; await save(p); }
+    if (withCombo) { combo.checks = []; saveCombo(); }
     renderHome(); renderFolder0();
     toast('チェックを外しました');
   }
   async function depart() {
+    if (state.currentId === COMBO_ID) return departCombo();
     const p = getPat(state.currentId);
     p.session = { date: todayStr(), ids: [], finished: true };
     p.lastDepartedAt = Date.now();
@@ -942,6 +1410,24 @@
     goBackFromList();
     toast('いってらっしゃい 👋');
   }
+  async function departCombo() {
+    for (const p of comboPatterns()) {
+      p.session = { date: todayStr(), ids: [], finished: true };
+      p.lastDepartedAt = Date.now();
+      await save(p);
+    }
+    combo = null; saveCombo();
+    state.currentId = null;
+    goHome();
+    toast('いってらっしゃい 👋');
+  }
+  function cancelCombo() {
+    if (!confirm('まとめをやめますか？\nチェックした内容は消えます。')) return;
+    combo = null; saveCombo();
+    state.currentId = null;
+    goHome();
+  }
+
   async function addItem(ownerId, label) {
     const owner = getPat(ownerId);
     owner.items.push({ id: uid(), label });
@@ -1003,6 +1489,7 @@
     $('#sheetName').value = pattern ? pattern.name : '';
     $('#sheetName').placeholder = '名前（例: ジム）';
     $('#patternOnly').style.display = 'block';
+    $('#alwaysToggleRow').style.display = settings.useAlways ? 'flex' : 'none';
     $('#sheetDel').style.display = pattern ? 'block' : 'none';
     $('#alwaysSw').classList.toggle('on', sheetCtx.useAlways);
     renderEmoPick();
@@ -1092,10 +1579,219 @@
 
   // ---------- 画面遷移 ----------
   function show(viewId) {
-    ['homeView', 'folderView', 'listView'].forEach((v) => {
+    ['homeView', 'folderView', 'listView', 'settingsView', 'mergeView'].forEach((v) => {
       $('#' + v).classList.toggle('active', v === viewId);
     });
   }
+  function renderSettings() {
+    const a = always();
+    $('#useAlwaysSw').classList.toggle('on', settings.useAlways);
+    $('#doubleTapSw').classList.toggle('on', settings.doubleTap);
+    $('#editAlwaysRow').style.display = settings.useAlways ? 'flex' : 'none';
+    $('#alwaysItemsLabel').textContent = a.items.length ? a.items.map((i) => i.label).join('・') : 'まだ何も入っていません';
+    $('#useAlwaysNote').textContent = settings.useAlways
+      ? ''
+      : '各パターンには、そのパターンに入れたものだけが出ます。';
+
+    let t = 0;
+    try { t = Number(localStorage.getItem(LAST_EXPORT_KEY) || 0); } catch (e) {}
+    const d = t ? new Date(t) : null;
+    $('#lastExportLabel').textContent = d
+      ? '最後に書き出したのは ' + (d.getMonth() + 1) + '月' + d.getDate() + '日'
+      : 'まだ書き出していません';
+
+    const groups = mergeGroups();
+    $('#mergeRow').style.display = (groups.length || Object.keys(aliases).length) ? 'flex' : 'none';
+    $('#mergeRowSub').textContent = groups.length
+      ? '「' + groups[0].map((e) => e.label).slice(0, 2).join('」と「') + '」など ' + groups.length + '組'
+      : '今は見つかっていません';
+
+    const pats = state.patterns.filter((p) => p.id !== ALWAYS_ID);
+    const items = state.patterns.reduce((n, p) => n + p.items.length, 0);
+    $('#setStats').textContent = pats.length + 'パターン・' + state.folders.length + 'フォルダ・' + items + '個';
+    renderVersionLabel();
+  }
+  let mergeTarget = null;
+  let mergePick = null;
+  function renderMerge() {
+    const groups = mergeGroups();
+    const scroll = $('#mergeScroll');
+    scroll.innerHTML = '';
+    if (!groups.length) {
+      const e = document.createElement('div');
+      e.className = 'empty';
+      e.style.padding = '48px 30px';
+      e.textContent = '似ている名前は見つかりませんでした';
+      scroll.appendChild(e);
+    }
+    for (const g of groups) {
+      const card = document.createElement('div');
+      card.className = 'mg-card';
+      card.innerHTML =
+        '<div class="names">' +
+        g.map((e) => '<span>' + esc(e.label) + '<small>' + e.count + '</small></span>').join('') +
+        '</div><button type="button">まとめる</button>';
+      card.querySelector('button').addEventListener('click', () => openMergeSheet(g));
+      scroll.appendChild(card);
+    }
+    if (Object.keys(aliases).length) {
+      const b = document.createElement('button');
+      b.className = 'wipe-btn';
+      b.style.marginTop = '18px';
+      b.textContent = '名寄せの記録を消す（' + Object.keys(aliases).length + '件）';
+      b.addEventListener('click', () => {
+        if (!confirm('覚えている言い換えを消しますか？\n持ち物の名前はそのままです。')) return;
+        aliases = {}; saveAliases(); renderMerge();
+      });
+      scroll.appendChild(b);
+    }
+    const pad = document.createElement('div');
+    pad.style.height = '24px';
+    scroll.appendChild(pad);
+  }
+  function openMerge() { renderMerge(); show('mergeView'); }
+
+  function openMergeSheet(group) {
+    mergeTarget = group;
+    mergePick = group[0].label;
+    renderMergeChips();
+    $('#mergeSheetBg').classList.add('show');
+  }
+  function renderMergeChips() {
+    const wrap = $('#mergeChips');
+    wrap.innerHTML = '';
+    for (const e of mergeTarget) {
+      const b = document.createElement('button');
+      b.textContent = e.label;
+      b.className = normName(e.label) === normName(mergePick) ? 'sel' : '';
+      b.addEventListener('click', () => { mergePick = e.label; renderMergeChips(); });
+      wrap.appendChild(b);
+    }
+  }
+  function closeMergeSheet() { $('#mergeSheetBg').classList.remove('show'); mergeTarget = null; }
+  async function commitMerge() {
+    if (!mergeTarget || !mergePick) return;
+    const keep = mergePick;
+    const keepKey = normName(keep);
+    const variants = mergeTarget.map((e) => e.label).filter((l) => normName(l) !== keepKey);
+
+    for (const p of state.patterns) {
+      let changed = false;
+      const seen = new Set();
+      const next = [];
+      for (const it of p.items) {
+        const k = normName(it.label);
+        const isVariant = variants.some((v) => normName(v) === k);
+        const label = isVariant ? keep : it.label;
+        if (isVariant) changed = true;
+        const nk = normName(label);
+        if (nk === keepKey) {
+          if (seen.has(keepKey)) { changed = true; continue; }   // 同じパターン内で重複したら1つに
+          seen.add(keepKey);
+        }
+        next.push(label === it.label ? it : { id: it.id, label });
+      }
+      if (changed) { p.items = next; await save(p); }
+    }
+    for (const v of variants) aliases[normName(v)] = keep;
+    saveAliases();
+    closeMergeSheet();
+    renderMerge();
+    renderHome(); renderFolder0();
+    toast('「' + keep + '」にまとめました');
+  }
+
+  function openSettings() {
+    renderSettings();
+    show('settingsView');
+  }
+  function toggleDoubleTap() {
+    settings.doubleTap = !settings.doubleTap;
+    saveSettings();
+    armed = { id: null, at: 0 };
+    renderSettings();
+  }
+  async function toggleUseAlways() {
+    settings.useAlways = !settings.useAlways;
+    saveSettings();
+    renderSettings();
+    renderHome();
+  }
+
+  // ---------- まとめる予定を選ぶ ----------
+  let pickerSel = null;
+  function patternsForPicker() {
+    const rows = [];
+    for (const it of topItems()) {
+      if (it.kind === 'pattern') rows.push({ folder: null, p: it.ref });
+      else for (const k of patsIn(it.id)) rows.push({ folder: it.ref.name, p: k });
+    }
+    return rows;
+  }
+  function openPicker(preset) {
+    pickerSel = new Set(preset || []);
+    renderPicker();
+    $('#pickerBg').classList.add('show');
+  }
+  function closePicker() { $('#pickerBg').classList.remove('show'); pickerSel = null; }
+  function renderPicker() {
+    const wrap = $('#pickerList');
+    wrap.innerHTML = '';
+    let lastFolder = undefined;
+    const rows = patternsForPicker();
+    if (!rows.length) {
+      wrap.innerHTML = '<div class="empty">パターンがまだありません</div>';
+    }
+    for (const r of rows) {
+      if (r.folder !== lastFolder) {
+        lastFolder = r.folder;
+        if (r.folder) {
+          const h = document.createElement('div');
+          h.className = 'pick-folder';
+          h.textContent = '📁 ' + r.folder;
+          wrap.appendChild(h);
+        }
+      }
+      const b = document.createElement('button');
+      b.className = 'pick-row' + (pickerSel.has(r.p.id) ? ' on' : '');
+      b.innerHTML =
+        '<span class="ck"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>' +
+        '<span class="nm">' + esc(r.p.emoji) + ' ' + esc(r.p.name) + '</span>' +
+        '<span class="cnt">' + r.p.items.length + 'つ</span>';
+      b.addEventListener('click', () => {
+        if (pickerSel.has(r.p.id)) pickerSel.delete(r.p.id); else pickerSel.add(r.p.id);
+        renderPicker();
+      });
+      wrap.appendChild(b);
+    }
+    const ok = $('#pickerOk');
+    ok.disabled = pickerSel.size === 0;
+    ok.style.opacity = pickerSel.size === 0 ? '0.45' : '1';
+    ok.textContent = pickerSel.size ? 'まとめる（' + pickerSel.size + '）' : 'まとめる';
+  }
+  function commitPicker() {
+    if (!pickerSel || !pickerSel.size) return;
+    const ids = patternsForPicker().map((r) => r.p.id).filter((id) => pickerSel.has(id));
+    const keep = new Set(ids);
+    const prev = (combo && combo.checks) || [];
+    // 外した予定のチェックは捨て、残した予定のチェックはそのまま
+    const alive = new Set();
+    if (settings.useAlways) for (const i of always().items) alive.add(i.id);
+    for (const id of ids) { const p = getPat(id); if (p) for (const i of p.items) alive.add(i.id); }
+    combo = { ids, checks: prev.filter((c) => alive.has(c)), createdAt: (combo && combo.createdAt) || Date.now() };
+    saveCombo();
+    closePicker();
+    openCombo();
+  }
+  function openCombo() {
+    state.currentId = COMBO_ID;
+    state.backTo = 'home';
+    state.editList = false;
+    renderList();
+    show('listView');
+    $('#listScroll').scrollTop = 0;
+  }
+
   function openFolder(id) {
     state.currentFolderId = id;
     state.editFolder = false;
@@ -1112,9 +1808,11 @@
     $('#listScroll').scrollTop = 0;
   }
   function goBackFromList() {
+    disarm();
     state.currentId = null;
     state.editList = false;
     if (state.backTo === 'folder' && state.currentFolderId) { renderFolder(); show('folderView'); }
+    else if (state.backTo === 'settings') { renderSettings(); show('settingsView'); }
     else { renderHome(); show('homeView'); }
   }
   function goHome() {
@@ -1138,13 +1836,40 @@
   function bind() {
     $('#homeEditBtn').addEventListener('click', () => { state.editHome = !state.editHome; renderHome(); });
     $('#alwaysCard').addEventListener('click', () => openList(ALWAYS_ID, 'home'));
+    $('#comboCard').addEventListener('click', () => {
+      comboPatterns().length ? openCombo() : openPicker([]);
+    });
+    $('#cancelComboBtn').addEventListener('click', cancelCombo);
+    $('#pickerCancel').addEventListener('click', closePicker);
+    $('#pickerOk').addEventListener('click', commitPicker);
+    $('#pickerBg').addEventListener('click', (e) => { if (e.target === $('#pickerBg')) closePicker(); });
     $('#folderBackBtn').addEventListener('click', goHome);
     $('#folderEditBtn').addEventListener('click', () => { state.editFolder = !state.editFolder; renderFolder(); });
     $('#backBtn').addEventListener('click', goBackFromList);
-    $('#listEditBtn').addEventListener('click', () => { state.editList = !state.editList; renderList(); });
+    $('#listEditBtn').addEventListener('click', () => {
+      if (state.currentId === COMBO_ID) { openPicker(combo ? combo.ids : []); return; }
+      state.editList = !state.editList; renderList();
+    });
     $('#goBtn').addEventListener('click', depart);
     $('#clearBtn').addEventListener('click', clearChecks);
     $('#wipeAllBtn').addEventListener('click', clearAllChecks);
+    $('#settingsBtn').addEventListener('click', openSettings);
+    $('#setBackBtn').addEventListener('click', goHome);
+    $('#useAlwaysSw').addEventListener('click', toggleUseAlways);
+    $('#doubleTapSw').addEventListener('click', toggleDoubleTap);
+    $('#mergeRow').addEventListener('click', openMerge);
+    $('#mergeBackBtn').addEventListener('click', openSettings);
+    $('#mergeCancel').addEventListener('click', closeMergeSheet);
+    $('#mergeOk').addEventListener('click', commitMerge);
+    $('#mergeSheetBg').addEventListener('click', (e) => { if (e.target === $('#mergeSheetBg')) closeMergeSheet(); });
+    $('#editAlwaysRow').addEventListener('click', () => openList(ALWAYS_ID, 'settings'));
+    $('#exportRow').addEventListener('click', exportData);
+    $('#importRow').addEventListener('click', () => $('#importFile').click());
+    $('#importFile').addEventListener('change', (e) => {
+      const f = e.target.files && e.target.files[0];
+      e.target.value = '';          // 同じファイルをもう一度選べるように
+      if (f) importData(f);
+    });
     $('#sheetCancel').addEventListener('click', closeSheet);
     $('#sheetOk').addEventListener('click', commitSheet);
     $('#sheetDel').addEventListener('click', sheetDelete);
@@ -1160,38 +1885,97 @@
   }
 
   // ---------- JSON 書き出し/取り込み ----------
+  // SCHEMA は旧名のまま（過去の書き出しファイルを読めるようにするため）。変えないこと。
   const SCHEMA = 'ittekimasu.v1';
+  const LAST_EXPORT_KEY = 'ittekimasu.lastExportAt';
+
   async function exportData() {
-    const data = { schema: SCHEMA, exportedAt: new Date().toISOString(), items: state.patterns, folders: state.folders };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = 'ittekimasu-sync.json';
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const payload = {
+      schema: SCHEMA, app: 'WIMB', appVersion: APP_VERSION,
+      exportedAt: new Date().toISOString(),
+      settings: { useAlways: settings.useAlways, doubleTap: settings.doubleTap },
+      aliases: aliases,
+      items: state.patterns, folders: state.folders
+    };
+    const text = JSON.stringify(payload, null, 2);
+    const name = 'wimb-backup-' + todayStr() + '.json';
+
+    // iPhoneでは共有シート経由が確実（「ファイルに保存」でiCloud Driveに置ける）。
+    // 使えない環境では通常のダウンロードにフォールバックする。
+    let shared = false;
+    try {
+      const f = new File([text], name, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [f] })) {
+        await navigator.share({ files: [f], title: 'WIMB バックアップ' });
+        shared = true;
+      }
+    } catch (e) {
+      if (e && e.name === 'AbortError') return;   // 本人が共有シートを閉じた
+      shared = false;
+    }
+    if (!shared) {
+      const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+    try { localStorage.setItem(LAST_EXPORT_KEY, String(Date.now())); } catch (e) {}
+    renderSettings();
+    toast('書き出しました');
   }
+
+  // 復元は「置き換え」。マージにすると、入れ直した端末で見本データと二重になるため。
   async function importData(file) {
-    const data = JSON.parse(await file.text());
-    if (data.schema !== SCHEMA) return;
-    const pById = new Map(state.patterns.map((n) => [n.id, n]));
-    for (const it of (data.items || [])) {
-      const local = pById.get(it.id);
-      if (!local || (it.updatedAt || 0) > (local.updatedAt || 0)) await put('patterns', it);
-    }
-    const fById = new Map(state.folders.map((n) => [n.id, n]));
-    for (const it of (data.folders || [])) {
-      const local = fById.get(it.id);
-      if (!local || (it.updatedAt || 0) > (local.updatedAt || 0)) await put('folders', it);
-    }
+    let data;
+    try { data = JSON.parse(await file.text()); }
+    catch (e) { toast('ファイルを読めませんでした'); return; }
+    if (!data || data.schema !== SCHEMA) { toast('WIMBのバックアップではありません'); return; }
+
+    const pats = (data.items || []).filter((x) => x && x.id);
+    const fols = (data.folders || []).filter((x) => x && x.id);
+    if (!pats.length) { toast('バックアップが空でした'); return; }
+
+    const when = typeof data.exportedAt === 'string' ? data.exportedAt.slice(0, 10) : '';
+    const body = pats.filter((x) => x.id !== ALWAYS_ID).length + 'パターン / ' + fols.length + 'フォルダ';
+    if (!confirm('このバックアップに置き換えますか？\n\n' + body + (when ? '（' + when + ' 書き出し）' : '') + '\n\n今このアプリに入っている内容は消えます。')) return;
+
+    await clearStore('patterns');
+    await clearStore('folders');
+    for (const it of pats) await put('patterns', it);
+    for (const it of fols) await put('folders', it);
     state.patterns = await getAll('patterns');
     state.folders = await getAll('folders');
-    renderHome();
+
+    // 「いつもの」が入っていないバックアップでも壊れないように、空で用意しておく
+    if (!always()) {
+      const a = { id: ALWAYS_ID, name: 'いつもの', emoji: '✅', order: 0, items: [],
+                  useAlways: false, folderId: null, session: null, lastDepartedAt: null, updatedAt: Date.now() };
+      await put('patterns', a);
+      state.patterns.push(a);
+    }
+
+    if (data.settings) {
+      if (typeof data.settings.useAlways === 'boolean') settings.useAlways = data.settings.useAlways;
+      if (typeof data.settings.doubleTap === 'boolean') settings.doubleTap = data.settings.doubleTap;
+      saveSettings();
+    }
+    if (data.aliases && typeof data.aliases === 'object') { aliases = data.aliases; saveAliases(); }
+    state.currentId = null;
+    state.currentFolderId = null;
+    state.editHome = false;
+    renderSettings();
+    goHome();
+    toast('復元しました');
   }
   window.ittekimasu = { exportData, importData };
 
   // ---------- 起動 ----------
   (async function init() {
     setupViewportTracking();
+    loadSettings();
+    loadAliases();
+    loadCombo();
     await openDB();
     await loadAll();
     bind();
