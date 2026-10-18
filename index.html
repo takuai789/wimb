@@ -664,7 +664,7 @@
   function clearStore(store) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '2.2.0';
+  const APP_VERSION = '2.3.0';
   function renderVersionLabel() {
     const el = document.getElementById('setVersion');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -1898,7 +1898,7 @@
       items: state.patterns, folders: state.folders
     };
     const text = JSON.stringify(payload, null, 2);
-    const name = 'wimb-backup-' + todayStr() + '.json';
+    const name = 'WIMB_' + todayStr() + '.json';
 
     // iPhoneでは共有シート経由が確実（「ファイルに保存」でiCloud Driveに置ける）。
     // 使えない環境では通常のダウンロードにフォールバックする。
