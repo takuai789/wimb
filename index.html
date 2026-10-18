@@ -252,6 +252,19 @@
     transition: background 0.12s;
   }
   /* 1回目のタップ: 「もう一度」の待ち状態 */
+  .row.glance { padding-top: 16px; padding-bottom: 16px; }
+  .row.glance .lb { font-size: 22px; font-weight: 700; letter-spacing: .02em; }
+  .row.glance .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex-shrink: 0; margin: 0 4px; }
+  .forgot { background: rgba(232,203,128,0.12); border: 1px solid rgba(232,203,128,0.35); border-radius: 14px; padding: 14px 14px 10px; margin: 14px 16px 0; }
+  .forgot b { display: block; font-size: 15px; line-height: 1.5; color: var(--ink); }
+  .forgot > span { display: block; font-size: 12px; color: var(--secondary); margin-top: 2px; }
+  .forgot .fg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .forgot .fg-chips button { border: 1px solid var(--sep); background: var(--field); color: var(--ink); border-radius: 999px; padding: 6px 12px; font: inherit; font-size: 13px; }
+  .forgot .fg-chips button.on { background: var(--amber); color: var(--on-gold); border-color: var(--amber); font-weight: 700; }
+  .forgot .fg-row { display: flex; gap: 8px; margin-top: 10px; }
+  .forgot .fg-row input { flex: 1; min-width: 0; height: 40px; border-radius: 10px; border: 0; background: var(--field); color: var(--ink); font: inherit; font-size: 16px; padding: 0 12px; outline: none; }
+  .forgot .fg-row button { border: 0; border-radius: 10px; background: var(--amber); color: var(--on-gold); font: inherit; font-size: 15px; font-weight: 700; padding: 0 16px; }
+  .forgot .fg-none { display: block; margin: 8px auto 0; border: 0; background: none; color: var(--secondary); font: inherit; font-size: 13px; padding: 6px 10px; }
   .row.armed { background: rgba(232,203,128,0.10); }
   .row.armed .ck { border-color: var(--amber); transform: scale(1.1); }
   .row .ck { transition: background 0.15s, border-color 0.15s, transform 0.12s; }
@@ -420,6 +433,7 @@
         </div>
         <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       </div>
+      <div id="forgotBox"></div>
       <div class="always-card combo" id="comboCard">
         <div class="ring">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
@@ -504,9 +518,9 @@
     <div class="scroll">
 
       <div class="set-group">
-        <h3>いつもの</h3>
+        <h3>持ち物</h3>
         <div class="set-list">
-          <div class="set-row static">
+          <div class="set-row static" style="display:none;">
             <div class="tl">
               <b>「いつもの」を使う</b>
               <span>財布・鍵など毎回持つものを、各パターンの先頭に自動で出します</span>
@@ -520,7 +534,7 @@
             </div>
             <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
           </button>
-          <button class="set-row" id="editAlwaysRow">
+          <button class="set-row" id="editAlwaysRow" style="display:none !important;">
             <div class="tl">
               <b>中身を編集</b>
               <span id="alwaysItemsLabel">—</span>
@@ -531,7 +545,7 @@
         <div class="set-note" id="useAlwaysNote"></div>
       </div>
 
-      <div class="set-group">
+      <div class="set-group" style="display:none;">
         <h3>チェック</h3>
         <div class="set-list">
           <div class="set-row static">
@@ -664,7 +678,7 @@
   function clearStore(store) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '2.4.0';
+  const APP_VERSION = '2.5.0';
   function renderVersionLabel() {
     const el = document.getElementById('setVersion');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -805,7 +819,14 @@
   const settings = { useAlways: true, doubleTap: true };
   function loadSettings() {
     try { Object.assign(settings, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); } catch (e) {}
+    settings.useAlways = false; // 2026-10〜：忘れがちなものだけを入れる方針にしたので「いつもの」は使わない（データは残す）
   }
+  const MAX_ITEMS = 5; // 1パターンに入れるのは忘れがちなものを5個まで
+  // 出かけたあとに「何か忘れた？」と聞くための記録
+  const TRIP_KEY = 'ittekimasu.lastTrip';
+  function loadTrip() { try { return JSON.parse(localStorage.getItem(TRIP_KEY) || 'null'); } catch (e) { return null; } }
+  function saveTrip(t) { try { if (t) localStorage.setItem(TRIP_KEY, JSON.stringify(t)); else localStorage.removeItem(TRIP_KEY); } catch (e) {} }
+  const ASK_AFTER = 10 * 60000, ASK_UNTIL = 36 * 3600000; // 出発10分後〜36時間のあいだ聞く
   function saveSettings() {
     try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch (e) {}
   }
@@ -947,7 +968,37 @@
   }
 
   // ---------- ホーム描画 ----------
+  function renderForgot() {
+    const box = $('#forgotBox');
+    const t = loadTrip();
+    const pats = t ? (t.ids || []).map(getPat).filter(Boolean) : [];
+    const age = t ? Date.now() - t.at : 0;
+    if (!t || !pats.length || age < ASK_AFTER || age > ASK_UNTIL || state.editHome) { box.innerHTML = ''; if (t && age > ASK_UNTIL) saveTrip(null); return; }
+    let sel = t.sel && pats.some((p) => p.id === t.sel) ? t.sel : pats[0].id;
+    const when = new Date(t.at);
+    box.innerHTML = '<div class="forgot">'
+      + '<b>「' + esc(pats.map((p) => p.name).join('・')) + '」のお出かけ（' + (when.getMonth() + 1) + '/' + when.getDate() + '）、何か忘れた？</b>'
+      + '<span>忘れたものを足しておくと、次から出ます</span>'
+      + (pats.length > 1 ? '<div class="fg-chips">' + pats.map((p) => '<button type="button" data-fgsel="' + p.id + '" class="' + (p.id === sel ? 'on' : '') + '">' + esc(p.emoji + ' ' + p.name) + '</button>').join('') + '</div>' : '')
+      + '<div class="fg-row"><input type="text" id="fgInput" placeholder="忘れたもの" maxlength="24" enterkeyhint="done" /><button type="button" id="fgAdd">足す</button></div>'
+      + '<button type="button" class="fg-none" id="fgNone">なかった 👍</button></div>';
+    box.querySelectorAll('[data-fgsel]').forEach((b) => b.addEventListener('click', () => { t.sel = b.dataset.fgsel; saveTrip(t); renderForgot(); }));
+    const add = async () => {
+      const v = $('#fgInput').value.trim(); if (!v) return;
+      const p = getPat(sel); if (!p) return;
+      const label = applyAlias(v) || v;
+      if (p.items.length >= MAX_ITEMS) { toast(p.name + 'は' + MAX_ITEMS + '個まで。覚えたものを消してから足してね'); return; }
+      p.items.push({ id: uid(), label }); await save(p);
+      saveTrip(null); renderHome();
+      toast('「' + label + '」を' + p.name + 'に足しました');
+    };
+    $('#fgAdd').addEventListener('click', add);
+    $('#fgInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); add(); } });
+    $('#fgNone').addEventListener('click', () => { saveTrip(null); renderHome(); toast('よかった 👍'); });
+  }
+
   function renderHome() {
+    renderForgot();
     const a = always();
     $('#alwaysCard').style.display = settings.useAlways ? 'flex' : 'none';
     renderComboCard();
@@ -982,7 +1033,7 @@
     // チェックが残っているパターンがあるときだけ、一括で外すボタンを出す
     const dirtyCount = checkedPatterns().length + (comboHasChecks() ? 1 : 0);
     const wipe = $('#wipeAllBtn');
-    wipe.style.display = (dirtyCount && !state.editHome) ? 'block' : 'none';
+    wipe.style.display = 'none';
     wipe.textContent = 'すべてのチェックを外す（' + dirtyCount + '件）';
 
     if (state.editHome) attachDrag(grid, commitHomeOrder);
@@ -999,10 +1050,8 @@
     }
     card.classList.add('active');
     $('#comboTitle').textContent = 'まとめ中: ' + pats.map((p) => p.name).join('・');
-    const { total, done } = comboCounts();
-    const rest = total - done;
-    $('#comboSub').textContent = total === 0 ? '持ち物がありません'
-      : (rest === 0 ? 'ぜんぶそろいました' : 'あと ' + rest + 'つ');
+    const { total } = comboCounts();
+    $('#comboSub').textContent = total === 0 ? '持ち物がありません' : '忘れがちなもの ' + total + 'つ';
   }
 
   function addCard(emo, label, onClick) {
@@ -1178,18 +1227,12 @@
     $('#listEditBtn').classList.remove('done');
     $('#listEditBtn').style.visibility = 'visible';
 
-    const { total, done, checks, groups } = comboCounts();
-    const rest = total - done;
-    $('#progressWrap').style.display = 'block';
+    const { checks, groups } = comboCounts();
+    $('#progressWrap').style.display = 'none';
     $('#listFooter').style.display = 'block';
-    $('#progLeft').textContent = total === 0 ? '持ち物がありません'
-      : (rest === 0 ? 'ぜんぶそろいました' : 'あと ' + rest + 'つ');
-    $('#progRight').textContent = total === 0 ? '' : done + ' / ' + total;
-    $('#progBar').classList.toggle('done', total > 0 && rest === 0);
-    $('#progBar').firstElementChild.style.width = (total ? (done / total) * 100 : 0) + '%';
-    $('#goBtn').disabled = !(total > 0 && rest === 0);
-    $('#goText').textContent = rest === 0 && total > 0 ? 'いってきます 👋' : '出発';
-    $('#clearBtn').style.visibility = done > 0 ? 'visible' : 'hidden';
+    $('#goBtn').disabled = false;
+    $('#goText').textContent = 'いってきます 👋';
+    $('#clearBtn').style.display = 'none';
     $('#cancelComboBtn').style.display = 'block';
 
     const scroll = $('#listScroll');
@@ -1217,18 +1260,12 @@
     const total = vis.length;
     const done = vis.filter((v) => checks.has(v.item.id)).length;
 
-    $('#progressWrap').style.display = editing ? 'none' : 'block';
+    $('#progressWrap').style.display = 'none';
     $('#listFooter').style.display = editing ? 'none' : 'block';
     if (!editing) {
-      const rest = total - done;
-      $('#progLeft').textContent = total === 0 ? '持ち物がありません' : (rest === 0 ? 'ぜんぶそろいました' : 'あと ' + rest + 'つ');
-      $('#progRight').textContent = total === 0 ? '' : done + ' / ' + total;
-      $('#progBar').classList.toggle('done', total > 0 && rest === 0);
-      $('#progBar').firstElementChild.style.width = (total ? (done / total) * 100 : 0) + '%';
-      const go = $('#goBtn');
-      go.disabled = !(total > 0 && rest === 0);
-      $('#goText').textContent = rest === 0 && total > 0 ? 'いってきます 👋' : '出発';
-      $('#clearBtn').style.visibility = done > 0 ? 'visible' : 'hidden';
+      $('#goBtn').disabled = false;
+      $('#goText').textContent = 'いってきます 👋';
+      $('#clearBtn').style.display = 'none';
     }
 
     const scroll = $('#listScroll');
@@ -1236,13 +1273,15 @@
     if (settings.useAlways && !isAlways && p.useAlways) {
       scroll.appendChild(groupEl('いつもの', always().items, ALWAYS_ID, checks, editing, true));
     }
-    scroll.appendChild(groupEl(isAlways ? '毎回もつもの' : 'このお出かけ', p.items, p.id, checks, editing, false));
+    scroll.appendChild(groupEl(isAlways ? '毎回もつもの' : (editing ? '忘れがちなもの（' + p.items.length + ' / ' + MAX_ITEMS + '）' : '忘れずに'), p.items, p.id, checks, editing, false));
 
     if (editing) {
       const tip = document.createElement('div');
       tip.className = 'hint';
       tip.style.padding = '4px 32px 24px';
-      tip.textContent = isAlways ? 'ここに入れたものは、各パターンの先頭に自動で出ます' : '';
+      tip.textContent = isAlways ? 'ここに入れたものは、各パターンの先頭に自動で出ます'
+        : p.items.length > MAX_ITEMS ? p.items.length + '個あります。もう覚えているものは消してOK（' + MAX_ITEMS + '個までがおすすめ）'
+        : '覚えているものは入れず、忘れたことがあるものだけ。' + MAX_ITEMS + '個までです。';
       scroll.appendChild(tip);
     } else {
       const pad = document.createElement('div');
@@ -1264,29 +1303,30 @@
     if (items.length === 0 && !editing) {
       const e = document.createElement('div');
       e.className = 'empty';
-      e.textContent = '編集から持ち物を追加できます';
+      e.textContent = '編集から、忘れがちなものを足せます';
       list.appendChild(e);
     }
 
     for (const it of items) {
-      const row = document.createElement(editing ? 'div' : 'button');
-      row.className = 'row' + (!editing && checks.has(it.id) ? ' on' : '');
+      const row = document.createElement('div');
+      row.className = 'row' + (editing ? '' : ' glance');
       if (editing) {
         row.innerHTML =
           '<span class="minus"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M5 12h14"/></svg></span>' +
           '<span class="lb">' + esc(it.label) + '</span>';
         row.querySelector('.minus').addEventListener('click', () => removeItem(ownerId, it.id));
       } else {
-        row.innerHTML =
-          '<span class="ck"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>' +
-          '<span class="lb">' + esc(it.label) + '</span>' +
-          '<span class="again">もう一度</span>';
-        row.addEventListener('click', () => onRowTap(it.id, row));
+        row.innerHTML = '<span class="dot"></span><span class="lb">' + esc(it.label) + '</span>';
       }
       list.appendChild(row);
     }
 
-    if (editing) {
+    if (editing && !isAlwaysGroup && items.length >= MAX_ITEMS && ownerId !== ALWAYS_ID) {
+      const full = document.createElement('div');
+      full.className = 'empty';
+      full.textContent = MAX_ITEMS + '個まで入っています。覚えたものを消すと、足せるようになります';
+      list.appendChild(full);
+    } else if (editing) {
       const ar = document.createElement('div');
       ar.className = 'add-row';
       ar.innerHTML =
@@ -1407,10 +1447,12 @@
     p.session = { date: todayStr(), ids: [], finished: true };
     p.lastDepartedAt = Date.now();
     await save(p);
+    saveTrip({ ids: [p.id], at: Date.now() });
     goBackFromList();
     toast('いってらっしゃい 👋');
   }
   async function departCombo() {
+    saveTrip({ ids: comboPatterns().map((p) => p.id), at: Date.now() });
     for (const p of comboPatterns()) {
       p.session = { date: todayStr(), ids: [], finished: true };
       p.lastDepartedAt = Date.now();
@@ -1430,6 +1472,7 @@
 
   async function addItem(ownerId, label) {
     const owner = getPat(ownerId);
+    if (ownerId !== ALWAYS_ID && owner.items.length >= MAX_ITEMS) { toast(MAX_ITEMS + '個までです。覚えたものを消してね'); renderList(); return; }
     owner.items.push({ id: uid(), label });
     await save(owner);
     renderList();
@@ -1587,11 +1630,9 @@
     const a = always();
     $('#useAlwaysSw').classList.toggle('on', settings.useAlways);
     $('#doubleTapSw').classList.toggle('on', settings.doubleTap);
-    $('#editAlwaysRow').style.display = settings.useAlways ? 'flex' : 'none';
+    $('#editAlwaysRow').style.display = 'none';
     $('#alwaysItemsLabel').textContent = a.items.length ? a.items.map((i) => i.label).join('・') : 'まだ何も入っていません';
-    $('#useAlwaysNote').textContent = settings.useAlways
-      ? ''
-      : '各パターンには、そのパターンに入れたものだけが出ます。';
+    $('#useAlwaysNote').textContent = '覚えているものは入れず、忘れたことがあるものだけを1パターン' + MAX_ITEMS + '個まで。';
 
     let t = 0;
     try { t = Number(localStorage.getItem(LAST_EXPORT_KEY) || 0); } catch (e) {}
