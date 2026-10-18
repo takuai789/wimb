@@ -549,13 +549,13 @@
         <div class="set-list">
           <button class="set-row gold" id="exportRow">
             <div class="tl">
-              <b>バックアップを書き出す</b>
+              <b>データを書き出す（バックアップ）</b>
               <span id="lastExportLabel">—</span>
             </div>
           </button>
           <button class="set-row" id="importRow">
             <div class="tl">
-              <b>バックアップから復元する</b>
+              <b>データを取り込む</b>
               <span>今の中身は、バックアップの内容に置き換わります</span>
             </div>
           </button>
@@ -664,7 +664,7 @@
   function clearStore(store) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '2.3.0';
+  const APP_VERSION = '2.4.0';
   function renderVersionLabel() {
     const el = document.getElementById('setVersion');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -1938,7 +1938,7 @@
 
     const when = typeof data.exportedAt === 'string' ? data.exportedAt.slice(0, 10) : '';
     const body = pats.filter((x) => x.id !== ALWAYS_ID).length + 'パターン / ' + fols.length + 'フォルダ';
-    if (!confirm('このバックアップに置き換えますか？\n\n' + body + (when ? '（' + when + ' 書き出し）' : '') + '\n\n今このアプリに入っている内容は消えます。')) return;
+    if (!(await uiAsk('このバックアップに置き換えますか？\n' + body + (when ? '（' + when + ' 書き出し）' : '') + '\n今このアプリに入っている内容は消えます。', '置き換える'))) return;
 
     await clearStore('patterns');
     await clearStore('folders');
@@ -2036,6 +2036,14 @@
     document.body.appendChild(b);
     requestAnimationFrame(() => b.classList.add('show'));
   }
+</script>
+<div id="ui-toast" style="position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 16px);transform:translateX(-50%);background:rgba(28,28,30,.94);color:#fff;padding:11px 18px;border-radius:12px;font-size:14px;z-index:9000;opacity:0;pointer-events:none;transition:opacity .25s;max-width:90vw;text-align:center;font-family:inherit"></div>
+<div id="ui-ask" style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:9001;padding:24px"><div style="background:#fff;color:#1c1c1e;border-radius:16px;padding:20px 18px 14px;max-width:330px;width:100%;font-family:inherit"><p id="ui-ask-msg" style="margin:0 0 16px;font-size:15px;line-height:1.7;white-space:pre-line;text-align:center"></p><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button type="button" id="ui-ask-no" style="padding:11px;border-radius:10px;border:0;background:rgba(0,0,0,.07);color:inherit;font:inherit;font-size:15px;font-weight:700">やめる</button><button type="button" id="ui-ask-yes" style="padding:11px;border-radius:10px;border:0;background:#E5484D;color:#fff;font:inherit;font-size:15px;font-weight:700">OK</button></div></div></div>
+<script>
+  // 自前のお知らせ・確認（iPhoneのホーム画面アプリでは alert/confirm が出ないことがあるため）
+  let _uiT = 0;
+  function uiToast(msg){ const t=document.getElementById('ui-toast'); t.textContent=msg; t.style.opacity='1'; clearTimeout(_uiT); _uiT=setTimeout(()=>{t.style.opacity='0';}, 2400); }
+  function uiAsk(msg, yes){ return new Promise(res=>{ const bg=document.getElementById('ui-ask'); document.getElementById('ui-ask-msg').textContent=msg; const y=document.getElementById('ui-ask-yes'), n=document.getElementById('ui-ask-no'); y.textContent=yes||'OK'; bg.style.display='flex'; const done=v=>{ bg.style.display='none'; y.onclick=n.onclick=null; res(v); }; y.onclick=()=>done(true); n.onclick=()=>done(false); }); }
 </script>
 </body>
 </html>
