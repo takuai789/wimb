@@ -7,7 +7,8 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="WIMB" />
-<meta name="theme-color" content="#2E3E6E" />
+<meta name="theme-color" content="#F2F6FC" id="themeColor" />
+<script>try { const t = localStorage.getItem('ittekimasu.theme'); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <link rel="manifest" href="manifest.webmanifest" />
 <link rel="apple-touch-icon" href="icon-192.png" />
 <!-- 埋め込みSVGファビコン: 紺のsquircle + ライトゴールドのバッグ（PNGアイコンと同じ絵） -->
@@ -18,31 +19,30 @@
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet" />
 <style>
   :root {
-    color-scheme: dark;
-    --bg-top: #2E3E6E;      /* 下地グラデの上端（明るい紺） */
-    --bg: #1B2646;          /* 下地グラデの下端 */
-    --card: rgba(255,255,255,0.085);  /* カード・リスト（下地に重ねる） */
-    --field: rgba(255,255,255,0.14);  /* 入力欄・チップ・タイル */
-    --sheet: #2F3B66;       /* シートは下が透けないよう不透明 */
-    --ink: #F4F1E8;
-    --secondary: rgba(244,241,232,0.58);
-    --tertiary: rgba(244,241,232,0.32);
-    --sep: rgba(255,255,255,0.09);
-    --on-gold: #1B2238;     /* ゴールドの上に乗せる文字色 */
-    --red: #FF5A4E;
-    /* アクセントは全部ライトゴールド。変数名は旧来のまま（参照箇所が多いため） */
-    --amber: #E8CB80;
-    --amber-light: #FCF0CE;
-    --blue: #E8CB80;
-    --green: #E8CB80;
+    color-scheme: light;
+    --card: #FFFFFF;
+    --sheet: #FFFFFF;
+    --ink: #1E2230;
+    --secondary: rgba(30,34,48,0.56);
+    --tertiary: rgba(30,34,48,0.34);
+    --sep: rgba(30,34,48,0.08);
+    --red: #E5484D;
+    --shadow: 0 1px 2px rgba(20,24,40,0.06);
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
+  /* カラー（フラットで明るい6色）。アクセントの変数名は旧来の --amber のまま（参照箇所が多いため） */
+  :root, [data-theme="sora"] { --amber: #2F7FE0; --amber-light: #2F7FE0; --blue: #2F7FE0; --green: #2F7FE0; --on-gold: #ffffff; --bg: #F2F6FC; --bg-top: #F2F6FC; --field: #E6EEF9; --accent-soft: color-mix(in srgb, #2F7FE0 12%, transparent); --accent-line: color-mix(in srgb, #2F7FE0 35%, transparent); }
+  [data-theme="mint"] { --amber: #12A594; --amber-light: #12A594; --blue: #12A594; --green: #12A594; --on-gold: #ffffff; --bg: #EFF8F6; --bg-top: #EFF8F6; --field: #E0F1EE; --accent-soft: color-mix(in srgb, #12A594 12%, transparent); --accent-line: color-mix(in srgb, #12A594 35%, transparent); }
+  [data-theme="lemon"] { --amber: #D9A200; --amber-light: #D9A200; --blue: #D9A200; --green: #D9A200; --on-gold: #3A2E00; --bg: #FBF8EC; --bg-top: #FBF8EC; --field: #F3EDD5; --accent-soft: color-mix(in srgb, #D9A200 12%, transparent); --accent-line: color-mix(in srgb, #D9A200 35%, transparent); }
+  [data-theme="coral"] { --amber: #EE5D50; --amber-light: #EE5D50; --blue: #EE5D50; --green: #EE5D50; --on-gold: #ffffff; --bg: #FCF3F1; --bg-top: #FCF3F1; --field: #F6E4E1; --accent-soft: color-mix(in srgb, #EE5D50 12%, transparent); --accent-line: color-mix(in srgb, #EE5D50 35%, transparent); }
+  [data-theme="lavender"] { --amber: #7C5CE6; --amber-light: #7C5CE6; --blue: #7C5CE6; --green: #7C5CE6; --on-gold: #ffffff; --bg: #F5F3FC; --bg-top: #F5F3FC; --field: #E9E4F8; --accent-soft: color-mix(in srgb, #7C5CE6 12%, transparent); --accent-line: color-mix(in srgb, #7C5CE6 35%, transparent); }
+  [data-theme="sumi"] { --amber: #2B2F38; --amber-light: #2B2F38; --blue: #2B2F38; --green: #2B2F38; --on-gold: #ffffff; --bg: #F3F3F4; --bg-top: #F3F3F4; --field: #E6E7EA; --accent-soft: color-mix(in srgb, #2B2F38 12%, transparent); --accent-line: color-mix(in srgb, #2B2F38 35%, transparent); }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; background: var(--bg); }
   body {
     /* 下地は上が明るい縦グラデ。bodyは高さ固定でスクロールしないので背景は動かない */
-    background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 62%);
+    background: var(--bg);
     font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
     color: var(--ink); font-size: 16px; -webkit-font-smoothing: antialiased;
     overscroll-behavior: none;
@@ -62,7 +62,7 @@
   .navbar {
     display: flex; align-items: center; justify-content: space-between;
     padding: 8px 12px; min-height: 44px; position: relative;
-    background: rgba(46,62,110,0.78);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
     backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     border-bottom: 0.5px solid var(--sep); z-index: 10;
   }
@@ -87,11 +87,11 @@
   .always-card {
     margin: 14px 16px 6px; background: var(--card); border-radius: 14px;
     padding: 14px 16px; display: flex; align-items: center; gap: 12px;
-    cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    cursor: pointer; box-shadow: var(--shadow);
   }
   .always-card .ring {
     width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
-    background: linear-gradient(135deg, var(--amber-light), var(--amber));
+    background: var(--amber);
     display: flex; align-items: center; justify-content: center; color: var(--on-gold);
   }
   .always-card .tx { flex: 1; min-width: 0; }
@@ -100,8 +100,8 @@
   .chev { color: var(--tertiary); flex-shrink: 0; }
 
   .always-card.combo.active {
-    box-shadow: 0 1px 4px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(232,203,128,0.35);
-    background: rgba(232,203,128,0.10);
+    box-shadow: var(--shadow), inset 0 0 0 1px var(--accent-line);
+    background: var(--accent-soft);
   }
   .picker { max-height: 46vh; overflow-y: auto; background: var(--field); border-radius: 12px; }
   .pick-folder { font-size: 11px; font-weight: 600; color: var(--secondary); padding: 10px 16px 4px; }
@@ -136,13 +136,13 @@
   .pat-card .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
   .pat-card .chips span { font-size: 15.5px; font-weight: 600; color: var(--ink); background: var(--field); border-radius: 9px; padding: 6px 11px; line-height: 1.3; }
   .pat-card .chips .none { background: none; color: var(--tertiary); font-weight: 500; font-size: 13px; padding: 4px 0; }
-  .pat-card.folder .kid { padding-top: 10px; margin-top: 4px; border-top: 0.5px solid rgba(232,203,128,0.18); }
+  .pat-card.folder .kid { padding-top: 10px; margin-top: 4px; border-top: 0.5px solid var(--accent-soft); }
   .pat-card.folder .hd + .kid { border-top: 0; padding-top: 2px; }
   .pat-card.folder .kid .kn { font-size: 12.5px; font-weight: 700; color: var(--amber); margin-bottom: 2px; }
   .pat-card {
     background: var(--card); border-radius: 16px; padding: 16px 14px;
     display: flex; flex-direction: column; gap: 6px; cursor: pointer;
-    position: relative; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    position: relative; box-shadow: var(--shadow);
     min-height: 0; justify-content: flex-start; text-align: left;
     border: 0; font-family: inherit; color: var(--ink);
   }
@@ -161,19 +161,19 @@
   /* フォルダカード: パターン単体と見分けられるよう、ゴールド寄りの面にする */
   .pat-card.folder {
     gap: 8px;
-    background: rgba(232,203,128,0.10);
-    box-shadow: 0 1px 4px rgba(0,0,0,0.35), inset 0 0 0 1px rgba(232,203,128,0.22);
+    background: var(--accent-soft);
+    box-shadow: var(--shadow), inset 0 0 0 1px var(--accent-line);
   }
   .fol-tile {
-    width: 52px; height: 52px; border-radius: 14px; background: rgba(232,203,128,0.14);
+    width: 52px; height: 52px; border-radius: 14px; background: var(--accent-soft);
     display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
     gap: 2px; padding: 5px; align-items: center; justify-items: center;
   }
   .fol-tile span { font-size: 15px; line-height: 1; }
-  .fol-tile.empty { display: flex; align-items: center; justify-content: center; color: rgba(232,203,128,0.55); font-size: 20px; }
+  .fol-tile.empty { display: flex; align-items: center; justify-content: center; color: var(--accent-line); font-size: 20px; }
   .fol-badge {
     position: static; flex-shrink: 0; font-size: 10px; font-weight: 700;
-    color: var(--amber); background: rgba(232,203,128,0.16);
+    color: var(--amber); background: var(--accent-soft);
     padding: 3px 8px; border-radius: 999px;
   }
 
@@ -190,8 +190,8 @@
   @keyframes wiggle { from { transform: rotate(-0.5deg); } to { transform: rotate(0.5deg); } }
   .pat-card.dragging { opacity: 0.25; }
   .pat-card.ghost {
-    background: #3B4877;
-    box-shadow: 0 18px 40px rgba(0,0,0,0.4); opacity: 0.96;
+    background: var(--card);
+    box-shadow: 0 14px 32px rgba(20,24,40,0.18); opacity: 0.96;
     animation: none !important; transition: none !important;
   }
   .pat-card.drop-target { outline: 2.5px solid var(--blue); outline-offset: 2px; }
@@ -199,8 +199,12 @@
   .hint { text-align: center; font-size: 13px; color: var(--secondary); padding: 8px 32px 4px; line-height: 1.6; }
   /* ---------- 設定画面 ---------- */
   .set-group { margin: 16px 16px 10px; }
+  .theme-pick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .theme-pick button { border: 2px solid transparent; background: var(--card); border-radius: 12px; padding: 12px 0 10px; font: inherit; font-size: 12.5px; font-weight: 600; color: var(--ink); display: flex; flex-direction: column; align-items: center; gap: 6px; box-shadow: var(--shadow); cursor: pointer; }
+  .theme-pick button i { width: 28px; height: 28px; border-radius: 50%; display: block; }
+  .theme-pick button.on { border-color: var(--amber); }
   .set-group > h3 { font-size: 12px; font-weight: 600; color: var(--secondary); padding: 6px 4px 8px; }
-  .set-list { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+  .set-list { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
   .set-row {
     display: flex; align-items: center; gap: 12px; padding: 14px 16px;
     border-bottom: 0.5px solid var(--sep); width: 100%;
@@ -236,10 +240,10 @@
   .progress-top { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 8px; }
   .progress-top .left { font-size: 15px; font-weight: 600; }
   .progress-top .right { font-size: 12px; color: var(--secondary); }
-  .bar { height: 6px; border-radius: 3px; background: rgba(255,255,255,0.12); overflow: hidden; }
+  .bar { height: 6px; border-radius: 3px; background: var(--field); overflow: hidden; }
   .bar > i {
     display: block; height: 100%; width: 0%;
-    background: linear-gradient(90deg, var(--amber-light), var(--amber));
+    background: var(--amber);
     border-radius: 3px; transition: width 0.25s ease-out;
   }
   .bar.done > i { background: var(--amber-light); }
@@ -250,10 +254,10 @@
     padding: 6px 4px 8px; display: flex; align-items: center; gap: 6px;
   }
   .group > h3 .tag {
-    font-size: 10px; background: rgba(232,203,128,0.16); color: var(--amber);
+    font-size: 10px; background: var(--accent-soft); color: var(--amber);
     padding: 2px 7px; border-radius: 999px; font-weight: 700;
   }
-  .list { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+  .list { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow); }
   .row {
     display: flex; align-items: center; gap: 12px; padding: 14px 16px;
     border-bottom: 0.5px solid var(--sep); cursor: pointer;
@@ -266,7 +270,7 @@
   .row.glance { padding-top: 16px; padding-bottom: 16px; }
   .row.glance .lb { font-size: 22px; font-weight: 700; letter-spacing: .02em; }
   .row.glance .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--amber); flex-shrink: 0; margin: 0 4px; }
-  .forgot { background: rgba(232,203,128,0.12); border: 1px solid rgba(232,203,128,0.35); border-radius: 14px; padding: 14px 14px 10px; margin: 14px 16px 0; }
+  .forgot { background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 14px; padding: 14px 14px 10px; margin: 14px 16px 0; }
   .forgot b { display: block; font-size: 15px; line-height: 1.5; color: var(--ink); }
   .forgot > span { display: block; font-size: 12px; color: var(--secondary); margin-top: 2px; }
   .forgot .fg-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
@@ -276,7 +280,7 @@
   .forgot .fg-row input { flex: 1; min-width: 0; height: 40px; border-radius: 10px; border: 0; background: var(--field); color: var(--ink); font: inherit; font-size: 16px; padding: 0 12px; outline: none; }
   .forgot .fg-row button { border: 0; border-radius: 10px; background: var(--amber); color: var(--on-gold); font: inherit; font-size: 15px; font-weight: 700; padding: 0 16px; }
   .forgot .fg-none { display: block; margin: 8px auto 0; border: 0; background: none; color: var(--secondary); font: inherit; font-size: 13px; padding: 6px 10px; }
-  .row.armed { background: rgba(232,203,128,0.10); }
+  .row.armed { background: var(--accent-soft); }
   .row.armed .ck { border-color: var(--amber); transform: scale(1.1); }
   .row .ck { transition: background 0.15s, border-color 0.15s, transform 0.12s; }
   .row .again {
@@ -311,11 +315,11 @@
   .sug { display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 16px 12px; border-top: 0.5px solid var(--sep); }
   .sug .cap { font-size: 12px; color: var(--secondary); width: 100%; }
   .sug button {
-    background: rgba(232,203,128,0.16); color: var(--amber); border: 0; border-radius: 999px;
+    background: var(--accent-soft); color: var(--amber); border: 0; border-radius: 999px;
     padding: 8px 14px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
   }
   /* 名寄せ画面 */
-  .mg-card { margin: 12px 16px; background: var(--card); border-radius: 14px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+  .mg-card { margin: 12px 16px; background: var(--card); border-radius: 14px; padding: 14px 16px; box-shadow: var(--shadow); }
   .mg-card .names { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .mg-card .names span {
     background: var(--field); border-radius: 999px; padding: 7px 12px; font-size: 14px;
@@ -323,19 +327,19 @@
   .mg-card .names span small { color: var(--secondary); font-size: 11px; margin-left: 4px; }
   .mg-card button {
     width: 100%; border: 0; border-radius: 10px; padding: 11px;
-    background: rgba(232,203,128,0.16); color: var(--amber);
+    background: var(--accent-soft); color: var(--amber);
     font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
   }
 
-  .footer { padding: 10px 16px calc(12px + var(--safe-bottom)); background: rgba(27,38,70,0.86); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--sep); }
+  .footer { padding: 10px 16px calc(12px + var(--safe-bottom)); background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid var(--sep); }
   .go-btn {
     width: 100%; border: 0; border-radius: 14px; padding: 16px;
     font-family: inherit; font-size: 17px; font-weight: 700; cursor: pointer;
-    background: linear-gradient(135deg, var(--amber-light), var(--amber));
-    color: var(--on-gold); box-shadow: 0 8px 26px rgba(232,203,128,0.28);
+    background: var(--amber);
+    color: var(--on-gold); box-shadow: 0 6px 18px var(--accent-line);
     display: flex; align-items: center; justify-content: center; gap: 8px;
   }
-  .go-btn[disabled] { background: rgba(255,255,255,0.08); color: var(--tertiary); box-shadow: none; cursor: default; }
+  .go-btn[disabled] { background: var(--field); color: var(--tertiary); box-shadow: none; cursor: default; }
   .clear-btn {
     display: block; margin: 8px auto 0; background: none; border: 0;
     font-family: inherit; font-size: 13px; color: var(--secondary); cursor: pointer; padding: 4px 10px;
@@ -343,7 +347,7 @@
 
   /* ---------- シート ---------- */
   .sheet-bg {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 900;
+    position: fixed; inset: 0; background: rgba(20,24,40,0.35); z-index: 900;
     display: none; align-items: flex-end; justify-content: center;
   }
   .sheet-bg.show { display: flex; }
@@ -365,7 +369,7 @@
     border-radius: 12px; font-size: 22px; cursor: pointer; display: flex;
     align-items: center; justify-content: center; padding: 0;
   }
-  .emo-pick button.sel { border-color: var(--amber); background: rgba(232,203,128,0.18); }
+  .emo-pick button.sel { border-color: var(--amber); background: var(--accent-soft); }
   .field-label { font-size: 12px; font-weight: 600; color: var(--secondary); margin: 16px 2px 8px; }
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .chips button {
@@ -391,7 +395,7 @@
   }
   .toggle-row .tl { font-size: 15px; }
   .toggle-row .ts { font-size: 11px; color: var(--secondary); margin-top: 2px; }
-  .sw { width: 50px; height: 30px; border-radius: 15px; background: rgba(255,255,255,0.16); border: 0; position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
+  .sw { width: 50px; height: 30px; border-radius: 15px; background: var(--field); border: 0; position: relative; cursor: pointer; flex-shrink: 0; transition: background 0.2s; }
   .sw::after { content: ''; position: absolute; top: 2px; left: 2px; width: 26px; height: 26px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3); transition: transform 0.2s; }
   .sw.on { background: var(--green); }
   .sw.on::after { transform: translateX(20px); }
@@ -414,7 +418,7 @@
     display: flex; align-items: center; justify-content: center; gap: 8px;
     background: var(--amber); color: var(--on-gold); border: 0; border-radius: 14px;
     padding: 14px 18px; font-family: inherit; font-size: 14px; font-weight: 600;
-    box-shadow: 0 8px 28px rgba(232,203,128,0.35); cursor: pointer;
+    box-shadow: 0 8px 28px var(--accent-line); cursor: pointer;
     transform: translateY(140%); transition: transform 0.35s cubic-bezier(.32,.72,0,1);
   }
   #updateBanner.show { transform: translateY(0); }
@@ -570,6 +574,11 @@
       </div>
 
       <div class="set-group">
+        <h3>カラー</h3>
+        <div class="theme-pick" id="themePick"></div>
+      </div>
+
+      <div class="set-group">
         <h3>データ</h3>
         <div class="set-list">
           <button class="set-row gold" id="exportRow">
@@ -689,7 +698,7 @@
   function clearStore(store) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '2.7.0';
+  const APP_VERSION = '2.8.0';
   function renderVersionLabel() {
     const el = document.getElementById('setVersion');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -1636,7 +1645,21 @@
       $('#' + v).classList.toggle('active', v === viewId);
     });
   }
+  // ---------- カラー ----------
+  const THEMES = [{k:'sora',l:'そら',c:'#2F7FE0',bg:'#F2F6FC'},{k:'mint',l:'ミント',c:'#12A594',bg:'#EFF8F6'},{k:'lemon',l:'レモン',c:'#D9A200',bg:'#FBF8EC'},{k:'coral',l:'コーラル',c:'#EE5D50',bg:'#FCF3F1'},{k:'lavender',l:'ラベンダー',c:'#7C5CE6',bg:'#F5F3FC'},{k:'sumi',l:'すみ',c:'#2B2F38',bg:'#F3F3F4'}];
+  function applyTheme(k) {
+    const t = THEMES.find((x) => x.k === k) || THEMES[0];
+    document.documentElement.dataset.theme = t.k;
+    const m = document.getElementById('themeColor'); if (m) m.setAttribute('content', t.bg);
+    try { localStorage.setItem('ittekimasu.theme', t.k); } catch (e) {}
+  }
+  function renderThemes() {
+    const cur = document.documentElement.dataset.theme || 'sora';
+    $('#themePick').innerHTML = THEMES.map((t) => '<button type="button" data-th="' + t.k + '" class="' + (t.k === cur ? 'on' : '') + '"><i style="background:' + t.c + '"></i>' + t.l + '</button>').join('');
+  }
+
   function renderSettings() {
+    renderThemes();
     const a = always();
     $('#useAlwaysSw').classList.toggle('on', settings.useAlways);
     $('#doubleTapSw').classList.toggle('on', settings.doubleTap);
@@ -1905,6 +1928,7 @@
     $('#clearBtn').addEventListener('click', clearChecks);
     $('#wipeAllBtn').addEventListener('click', clearAllChecks);
     $('#settingsBtn').addEventListener('click', openSettings);
+    $('#themePick').addEventListener('click', (e) => { const b = e.target.closest('[data-th]'); if (!b) return; applyTheme(b.dataset.th); renderThemes(); });
     $('#setBackBtn').addEventListener('click', goHome);
     $('#useAlwaysSw').addEventListener('click', toggleUseAlways);
     $('#doubleTapSw').addEventListener('click', toggleDoubleTap);
