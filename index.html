@@ -445,7 +445,7 @@
         <svg class="chev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
       </div>
       <div id="forgotBox"></div>
-      <div class="always-card combo" id="comboCard">
+      <div class="always-card combo" id="comboCard" style="display:none !important;">
         <div class="ring">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
         </div>
@@ -689,7 +689,7 @@
   function clearStore(store) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '2.6.0';
+  const APP_VERSION = '2.7.0';
   function renderVersionLabel() {
     const el = document.getElementById('setVersion');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -1011,7 +1011,7 @@
     renderForgot();
     const a = always();
     $('#alwaysCard').style.display = settings.useAlways ? 'flex' : 'none';
-    renderComboCard();
+
     $('#alwaysSub').textContent = a.items.length ? a.items.map((i) => i.label).join('・') : 'タップして登録';
 
     const grid = $('#homeGrid');
@@ -2026,7 +2026,7 @@
     setupViewportTracking();
     loadSettings();
     loadAliases();
-    loadCombo();
+    loadCombo(); combo = null; saveCombo(); // まとめ機能はやめた（2026-10）
     await openDB();
     await loadAll();
     bind();
