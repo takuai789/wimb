@@ -126,14 +126,24 @@
     padding: 16px 20px 8px; letter-spacing: 0.02em;
   }
   .grid {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+    display: grid; grid-template-columns: 1fr; gap: 10px;
     padding: 0 16px 20px;
   }
+  /* パターンカード（2026-10：一覧の時点で持ち物が見えるように。絵文字はやめて文字中心に） */
+  .pat-card .hd { display: flex; align-items: baseline; gap: 10px; }
+  .pat-card .hd .nm { flex: 1; min-width: 0; font-size: 18px; font-weight: 700; letter-spacing: .01em; }
+  .pat-card .hd .meta { font-size: 11.5px; color: var(--tertiary); white-space: nowrap; }
+  .pat-card .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+  .pat-card .chips span { font-size: 15.5px; font-weight: 600; color: var(--ink); background: var(--field); border-radius: 9px; padding: 6px 11px; line-height: 1.3; }
+  .pat-card .chips .none { background: none; color: var(--tertiary); font-weight: 500; font-size: 13px; padding: 4px 0; }
+  .pat-card.folder .kid { padding-top: 10px; margin-top: 4px; border-top: 0.5px solid rgba(232,203,128,0.18); }
+  .pat-card.folder .hd + .kid { border-top: 0; padding-top: 2px; }
+  .pat-card.folder .kid .kn { font-size: 12.5px; font-weight: 700; color: var(--amber); margin-bottom: 2px; }
   .pat-card {
     background: var(--card); border-radius: 16px; padding: 16px 14px;
     display: flex; flex-direction: column; gap: 6px; cursor: pointer;
     position: relative; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
-    min-height: 104px; justify-content: center; text-align: left;
+    min-height: 0; justify-content: flex-start; text-align: left;
     border: 0; font-family: inherit; color: var(--ink);
   }
   .pat-card .emo { font-size: 28px; line-height: 1; }
@@ -143,8 +153,9 @@
   .pat-card.add {
     align-items: center; justify-content: center; text-align: center;
     background: transparent; border: 2px dashed var(--tertiary);
-    color: var(--secondary); box-shadow: none; gap: 4px; min-height: 104px;
+    color: var(--secondary); box-shadow: none; gap: 4px; min-height: 0; flex-direction: row; padding: 14px;
   }
+  .pat-card.add .emo { font-size: 18px; }
   .pat-card.add .emo { font-size: 22px; }
 
   /* フォルダカード: パターン単体と見分けられるよう、ゴールド寄りの面にする */
@@ -161,7 +172,7 @@
   .fol-tile span { font-size: 15px; line-height: 1; }
   .fol-tile.empty { display: flex; align-items: center; justify-content: center; color: rgba(232,203,128,0.55); font-size: 20px; }
   .fol-badge {
-    position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 700;
+    position: static; flex-shrink: 0; font-size: 10px; font-weight: 700;
     color: var(--amber); background: rgba(232,203,128,0.16);
     padding: 3px 8px; border-radius: 999px;
   }
@@ -597,8 +608,8 @@
     <h2 id="sheetTitle">パターン</h2>
     <input class="nm" id="sheetName" type="text" placeholder="名前（例: ジム）" maxlength="16" />
     <div id="patternOnly">
-      <div class="emo-pick" id="emoPick"></div>
-      <div class="toggle-row" id="alwaysToggleRow">
+      <div class="emo-pick" id="emoPick" style="display:none;"></div>
+      <div class="toggle-row" id="alwaysToggleRow" style="display:none !important;">
         <div>
           <div class="tl">「いつもの」を足す</div>
           <div class="ts">財布・鍵などを先頭に自動表示</div>
@@ -678,7 +689,7 @@
   function clearStore(store) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '2.5.0';
+  const APP_VERSION = '2.6.0';
   function renderVersionLabel() {
     const el = document.getElementById('setVersion');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -712,7 +723,7 @@
     if (settings.useAlways && pats.some((p) => p.useAlways)) {
       groups.push({ id: ALWAYS_ID, title: 'いつもの', tag: true, items: always().items });
     }
-    for (const p of pats) groups.push({ id: p.id, title: p.emoji + ' ' + p.name, tag: false, items: p.items });
+    for (const p of pats) groups.push({ id: p.id, title: p.name, tag: false, items: p.items });
     return groups;
   }
   function comboCounts() {
@@ -936,18 +947,20 @@
   // ---------- カード生成 ----------
   const X_SVG = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>';
 
+  function chipsHTML(p) {
+    const items = visibleItems(p);
+    return '<div class="chips">' + (items.length ? items.map((v) => '<span>' + esc(v.item.label) + '</span>').join('') : '<span class="none">まだ何もありません</span>') + '</div>';
+  }
   function patternCard(p, opts) {
     const el = document.createElement('div');
     el.className = 'pat-card';
     el.dataset.oid = 'p:' + p.id;
-    const total = visibleItems(p).length;
     el.innerHTML =
       (opts.badge === 'del' ? '<button class="del-badge" data-del="' + p.id + '">' + X_SVG + '</button>' : '') +
       (opts.badge === 'out' ? '<button class="out-badge" data-out="' + p.id + '">出す</button>' : '') +
-      '<span class="emo">' + esc(p.emoji) + '</span>' +
-      '<span class="nm">' + esc(p.name) + '</span>' +
-      '<span class="cnt">' + total + 'つ</span>' +
-      (p.lastDepartedAt && !opts.badge ? '<span class="ago">前回 ' + daysAgo(p.lastDepartedAt) + '</span>' : '');
+      '<div class="hd"><span class="nm">' + esc(p.name) + '</span>' +
+      (p.lastDepartedAt && !opts.badge ? '<span class="meta">前回 ' + daysAgo(p.lastDepartedAt) + '</span>' : '') + '</div>' +
+      chipsHTML(p);
     return el;
   }
 
@@ -956,14 +969,11 @@
     el.className = 'pat-card folder';
     el.dataset.oid = 'f:' + f.id;
     const kids = patsIn(f.id);
-    const tile = kids.length
-      ? '<div class="fol-tile">' + kids.slice(0, 4).map((k) => '<span>' + esc(k.emoji) + '</span>').join('') + '</div>'
-      : '<div class="fol-tile empty">＋</div>';
     el.innerHTML =
       (editing ? '<button class="del-badge" data-delfol="' + f.id + '">' + X_SVG + '</button>' : '') +
-      '<span class="fol-badge">フォルダ</span>' + tile +
-      '<span class="nm">' + esc(f.name) + '</span>' +
-      '<span class="cnt">' + kids.length + '個のパターン</span>';
+      '<div class="hd"><span class="nm">' + esc(f.name) + '</span><span class="fol-badge">フォルダ・' + kids.length + '</span></div>' +
+      (kids.length ? kids.map((k) => '<div class="kid"><div class="kn">' + esc(k.name) + '</div>' + chipsHTML(k) + '</div>').join('')
+        : '<div class="chips"><span class="none">空のフォルダです。編集から中身を入れられます</span></div>');
     return el;
   }
 
@@ -979,7 +989,7 @@
     box.innerHTML = '<div class="forgot">'
       + '<b>「' + esc(pats.map((p) => p.name).join('・')) + '」のお出かけ（' + (when.getMonth() + 1) + '/' + when.getDate() + '）、何か忘れた？</b>'
       + '<span>忘れたものを足しておくと、次から出ます</span>'
-      + (pats.length > 1 ? '<div class="fg-chips">' + pats.map((p) => '<button type="button" data-fgsel="' + p.id + '" class="' + (p.id === sel ? 'on' : '') + '">' + esc(p.emoji + ' ' + p.name) + '</button>').join('') + '</div>' : '')
+      + (pats.length > 1 ? '<div class="fg-chips">' + pats.map((p) => '<button type="button" data-fgsel="' + p.id + '" class="' + (p.id === sel ? 'on' : '') + '">' + esc(p.name) + '</button>').join('') + '</div>' : '')
       + '<div class="fg-row"><input type="text" id="fgInput" placeholder="忘れたもの" maxlength="24" enterkeyhint="done" /><button type="button" id="fgAdd">足す</button></div>'
       + '<button type="button" class="fg-none" id="fgNone">なかった 👍</button></div>';
     box.querySelectorAll('[data-fgsel]').forEach((b) => b.addEventListener('click', () => { t.sel = b.dataset.fgsel; saveTrip(t); renderForgot(); }));
@@ -1057,7 +1067,7 @@
   function addCard(emo, label, onClick) {
     const el = document.createElement('div');
     el.className = 'pat-card add';
-    el.innerHTML = '<span class="emo">' + emo + '</span><span class="cnt">' + label + '</span>';
+    el.innerHTML = '<span class="emo">' + (emo === '📁' ? '＋' : emo) + '</span><span class="cnt">' + label + '</span>';
     el.addEventListener('click', () => { if (!justDragged) onClick(); });
     return el;
   }
@@ -1066,7 +1076,7 @@
   function renderFolder() {
     const f = getFol(state.currentFolderId);
     if (!f) { goHome(); return; }
-    $('#folderTitle').textContent = '📁 ' + f.name;
+    $('#folderTitle').textContent = f.name;
     $('#folderEditBtn').textContent = state.editFolder ? '完了' : '編集';
     $('#folderEditBtn').classList.toggle('done', state.editFolder);
     document.body.classList.toggle('editing', state.editHome || state.editFolder);
@@ -1249,7 +1259,7 @@
     const p = getPat(state.currentId);
     if (!p) return;
     const isAlways = p.id === ALWAYS_ID;
-    $('#listTitle').textContent = p.emoji + ' ' + p.name;
+    $('#listTitle').textContent = p.name;
     $('#listEditBtn').textContent = state.editList ? '完了' : '編集';
     $('#listEditBtn').classList.toggle('done', state.editList);
     $('#listEditBtn').style.visibility = isAlways ? 'hidden' : 'visible';
@@ -1572,7 +1582,7 @@
       return b;
     };
     wrap.appendChild(mk('入れない', null));
-    for (const f of state.folders.slice().sort(byOrder)) wrap.appendChild(mk('📁 ' + f.name, f.id));
+    for (const f of state.folders.slice().sort(byOrder)) wrap.appendChild(mk(f.name, f.id));
   }
   function closeSheet() { $('#sheetBg').classList.remove('show'); sheetCtx = null; }
 
@@ -1789,7 +1799,7 @@
         if (r.folder) {
           const h = document.createElement('div');
           h.className = 'pick-folder';
-          h.textContent = '📁 ' + r.folder;
+          h.textContent = r.folder;
           wrap.appendChild(h);
         }
       }
@@ -1797,7 +1807,7 @@
       b.className = 'pick-row' + (pickerSel.has(r.p.id) ? ' on' : '');
       b.innerHTML =
         '<span class="ck"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>' +
-        '<span class="nm">' + esc(r.p.emoji) + ' ' + esc(r.p.name) + '</span>' +
+        '<span class="nm">' + esc(r.p.name) + '</span>' +
         '<span class="cnt">' + r.p.items.length + 'つ</span>';
       b.addEventListener('click', () => {
         if (pickerSel.has(r.p.id)) pickerSel.delete(r.p.id); else pickerSel.add(r.p.id);
