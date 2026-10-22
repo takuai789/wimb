@@ -51,10 +51,10 @@
   }
   input, textarea { -webkit-user-select: text; user-select: text; }
   #app {
+    position: fixed; left: 0; right: 0; top: var(--app-top, 0px);
     height: var(--app-height, 100%);
     display: flex; flex-direction: column;
     padding-top: var(--safe-top);
-    transition: height 0.15s ease-out;
   }
   .view { display: none; flex-direction: column; flex: 1; min-height: 0; }
   .view.active { display: flex; }
@@ -347,7 +347,7 @@
 
   /* ---------- シート ---------- */
   .sheet-bg {
-    position: fixed; inset: 0; background: rgba(20,24,40,0.35); z-index: 900;
+    position: fixed; top: 0; left: 0; right: 0; bottom: var(--kb, 0px); background: rgba(20,24,40,0.35); z-index: 900;
     display: none; align-items: flex-end; justify-content: center;
   }
   .sheet-bg.show { display: flex; }
@@ -698,7 +698,7 @@
   function clearStore(store) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '2.9.0';
+  const APP_VERSION = '2.10.0';
   function renderVersionLabel() {
     const el = document.getElementById('setVersion');
     if (el) el.textContent = 'v' + APP_VERSION;
@@ -1975,6 +1975,21 @@
     const text = JSON.stringify(payload, null, 2);
     const name = 'WIMB_' + todayStr() + '.json';
 
+  // iPhoneの共有シートは、保存できても「キャンセル」と返すことがある。そのときは本人に聞く。
+      function bkAskSaved() {
+      return new Promise((resolve) => {
+        const bg = document.createElement('div');
+        bg.style.cssText = 'position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.32);display:flex;align-items:center;justify-content:center;padding:24px;font-family:inherit';
+        bg.innerHTML = '<div style="width:100%;max-width:330px;background:#fff;color:#1c1c1e;border-radius:18px;padding:20px 20px 12px;box-shadow:0 12px 40px rgba(0,0,0,.2)">' +
+          '<div style="font-size:16px;font-weight:700;margin-bottom:6px">バックアップは保存できましたか？</div>' +
+          '<div style="font-size:14px;line-height:1.6;color:#6e6e73">保存できていれば、バックアップのお知らせを消します。</div>' +
+          '<div style="display:flex;justify-content:flex-end;gap:4px;margin-top:12px">' +
+          '<button data-v="0" style="border:0;background:none;font:inherit;font-size:15px;padding:10px 12px;color:#6e6e73">やめた</button>' +
+          '<button data-v="1" style="border:0;background:none;font:inherit;font-size:15px;font-weight:700;padding:10px 12px;color:#007aff">保存できた</button></div></div>';
+        bg.addEventListener('click', (e) => { const b = e.target.closest('button[data-v]'); if (!b) return; bg.remove(); resolve(b.dataset.v === '1'); });
+        document.body.appendChild(bg);
+      });
+    }
     // iPhoneでは共有シート経由が確実（「ファイルに保存」でiCloud Driveに置ける）。
     // 使えない環境では通常のダウンロードにフォールバックする。
     let shared = false;
@@ -1985,7 +2000,8 @@
         shared = true;
       }
     } catch (e) {
-      if (e && e.name === 'AbortError') return;   // 本人が共有シートを閉じた
+      // iPhoneは保存できても「キャンセル」と返すことがあるので、本人に聞く
+      if (e && e.name === 'AbortError') { if (!(await bkAskSaved())) return; shared = true; }
       shared = false;
     }
     if (!shared) {
@@ -2060,17 +2076,35 @@
 
   // ---------- visualViewport（キーボード対策） ----------
   function setupViewportTracking() {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const root = document.documentElement;
-    let baseHeight = vv.height;
+    // iPhoneの定石（CLAUDE.md）：アプリ全体を「いま見えている範囲」（キーボードの上）にぴったり重ね、
+    // 下から出るシートは --kb ぶん持ち上げる。iPhoneは見える範囲を少しずつ動かすので、入力中は毎フレーム追いかける
+    const vv = window.visualViewport; if (!vv) return;
+    const root = document.documentElement; let baseH = vv.height, lastH = -1, lastT = -1, lastK = -1;
     function apply() {
-      root.style.setProperty('--app-height', vv.height + 'px');
-      document.body.classList.toggle('keyboard-open', vv.height < baseHeight - 120);
+      const h = Math.round(vv.height), t = Math.max(0, Math.round(vv.offsetTop));
+      const k = Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+      if (h !== lastH) { root.style.setProperty('--app-height', h + 'px'); lastH = h; }
+      if (t !== lastT) { root.style.setProperty('--app-top', t + 'px'); lastT = t; }
+      if (k !== lastK) { root.style.setProperty('--kb', k + 'px'); lastK = k; }
+      document.body.classList.toggle('keyboard-open', h < baseH - 120);
     }
-    vv.addEventListener('resize', apply);
-    vv.addEventListener('scroll', apply);
-    window.addEventListener('orientationchange', () => { setTimeout(() => { baseHeight = vv.height; apply(); }, 300); });
+    let until = 0, looping = false;
+    function follow(ms) {
+      until = Math.max(until, performance.now() + ms);
+      if (looping) return; looping = true;
+      const tick = () => { apply(); const a = document.activeElement; const typing = a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName); if (typing || performance.now() < until) requestAnimationFrame(tick); else looping = false; };
+      requestAnimationFrame(tick);
+    }
+    vv.addEventListener('resize', () => follow(600)); vv.addEventListener('scroll', () => follow(600));
+    document.addEventListener('focusin', (e) => {
+      follow(1200);
+      const el = e.target;
+      if (!el || !/^(INPUT|TEXTAREA)$/.test(el.tagName) || /^(date|time|month|checkbox|radio|file|range|color)$/.test(el.type)) return;
+      // キーボードが出きったあと、入力欄を見える位置へ
+      [350, 700].forEach((ms) => setTimeout(() => { if (document.activeElement === el) { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (_) {} } }, ms));
+    });
+    document.addEventListener('focusout', () => follow(1200));
+    window.addEventListener('orientationchange', () => setTimeout(() => { baseH = vv.height; follow(600); }, 300));
     apply();
   }
 
