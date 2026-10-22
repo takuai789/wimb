@@ -423,6 +423,9 @@
   }
   #updateBanner.show { transform: translateY(0); }
   #updateBanner svg { display: block; flex-shrink: 0; }
+
+  /* キーボードが出ているときも、シートが画面の上にはみ出さないように（見えている高さに収めて中をスクロール） */
+  .sheet { max-height: calc(var(--app-height, 100vh) - var(--safe-top, env(safe-area-inset-top, 0px)) - 16px) !important; overflow-y: auto !important; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 </style>
 </head>
 <body>
@@ -698,7 +701,7 @@
   function clearStore(store) { return new Promise((res, rej) => { const r = tx(store, 'readwrite').clear(); r.onsuccess = () => res(); r.onerror = () => rej(r.error); }); }
 
   // ---------- バージョン ----------
-  const APP_VERSION = '2.10.0';
+  const APP_VERSION = '2.11.0';
   function renderVersionLabel() {
     const el = document.getElementById('setVersion');
     if (el) el.textContent = 'v' + APP_VERSION;
